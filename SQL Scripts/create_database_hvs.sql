@@ -216,7 +216,7 @@ BEGIN
 
     -- calculates the price with the given discount
     -- subquery grabs the price of the given item
-    SET price = (SELECT item_price FROM items WHERE item_id = item_id_search) * (1 + detailsDiscount(receipt_id_search, item_id_search) );
+    SET price = (SELECT item_price FROM items WHERE item_id = item_id_search) * (1 - detailsDiscount(receipt_id_search, item_id_search) );
     
     RETURN(price);
 
