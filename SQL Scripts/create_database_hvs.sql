@@ -360,7 +360,8 @@ INSERT INTO receipt_details (receipt_id, item_id, member_id, item_discount_perce
 VALUES
 (1, 2, detailsMemberID(1), detailsDiscount(1, 2), detailsPrice(1, 2), 2),
 (1, 1, detailsMemberID(1), detailsDiscount(1, 1), detailsPrice(1, 1), 5),
-(2, 3, detailsMemberID(2), detailsDiscount(2, 3), detailsPrice(2, 3), 4)
+(2, 3, detailsMemberID(2), detailsDiscount(2, 3), detailsPrice(2, 3), 4),
+(3, 1, detailsMemberID(3), detailsDiscount(3, 1), detailsPrice(3, 1), 10)
 ;
 
 -- could have done in the insert statement, but it would have gotten too long
