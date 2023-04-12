@@ -155,8 +155,6 @@ CREATE TABLE receipt_details
 	-- foreign keys
 	receipt_id INT NOT NULL,
     item_id INT NOT NULL,
-    -- can be null... pulled from the receipts table
-    member_id INT,
     item_quantity INT NOT NULL,
     item_total DECIMAL(9,2) DEFAULT 0.0,
     --
@@ -222,23 +220,6 @@ BEGIN
 
 END //
 DELIMITER ;
-
-DROP FUNCTION IF EXISTS detailsMemberID;
-DELIMITER //
-CREATE FUNCTION detailsMemberID(
-    receipt_id_search INT
-)
-RETURNS INT
-DETERMINISTIC
-BEGIN
-    DECLARE id INT;
-
-    SET id = (SELECT member_id FROM receipts WHERE receipt_id = receipt_id_search);
-
-    RETURN(id);
-END //
-DELIMITER ;
-    
 
 DROP FUNCTION IF EXISTS receiptsStateTax;
 DELIMITER //
@@ -356,12 +337,12 @@ VALUES
 (4, NULL, '444237778','2023-04-08 13:05:00', receiptsCashierName(4, '2023-04-08 13:05:00') ),
 (2, 3, '444238578', NOW(), receiptsCashierName(2, NOW() ) );
 
-INSERT INTO receipt_details (receipt_id, item_id, member_id, item_discount_percentage, item_price, item_quantity)
+INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
 VALUES
-(1, 2, detailsMemberID(1), detailsDiscount(1, 2), detailsPrice(1, 2), 2),
-(1, 1, detailsMemberID(1), detailsDiscount(1, 1), detailsPrice(1, 1), 5),
-(2, 3, detailsMemberID(2), detailsDiscount(2, 3), detailsPrice(2, 3), 4),
-(3, 1, detailsMemberID(3), detailsDiscount(3, 1), detailsPrice(3, 1), 10)
+(1, 2, detailsDiscount(1, 2), detailsPrice(1, 2), 2),
+(1, 1, detailsDiscount(1, 1), detailsPrice(1, 1), 5),
+(2, 3, detailsDiscount(2, 3), detailsPrice(2, 3), 4),
+(3, 1, detailsDiscount(3, 1), detailsPrice(3, 1), 10)
 ;
 
 -- could have done in the insert statement, but it would have gotten too long
