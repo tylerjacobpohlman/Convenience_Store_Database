@@ -174,9 +174,6 @@ CREATE TABLE receipt_details
 -- *****************
 -- *WARNING* must create these procedures before complex insert statements
 -- creates detailsDiscount procedure used in the receipt_details table
-
--- Drops the previous version if it exists
-DROP FUNCTION IF EXISTS detailsDiscount;
 DELIMITER //
 CREATE FUNCTION detailsDiscount(
     receipt_id_search INT,
@@ -200,8 +197,8 @@ BEGIN
 END //
 DELIMITER ;
 
+-- creates function detailsPrice for order_details table
 -- *WARNING* must create detailsDiscount procedure first
-DROP FUNCTION IF EXISTS detailsPrice;
 DELIMITER //
 CREATE FUNCTION detailsPrice(
     receipt_id_search INT,
@@ -220,8 +217,7 @@ BEGIN
 
 END //
 DELIMITER ;
-
-DROP FUNCTION IF EXISTS receiptsStateTax;
+-- creates function receiptsStateTax for the receipts table
 DELIMITER //
 CREATE FUNCTION receiptsStateTax(
     receipt_id_search INT
@@ -244,8 +240,7 @@ BEGIN
     RETURN(tax);
 END //
 DELIMITER ;
-
-DROP FUNCTION IF EXISTS receiptsCashierName;
+-- creates function receiptsCashierName for the receipts table
 DELIMITER //
 CREATE FUNCTION receiptsCashierName(
     register_id_search INT,
@@ -269,8 +264,6 @@ BEGIN
     RETURN(name);
 END //
 DELIMITER ;
-
-
 
 -- *******************************************************************************************
 -- The following have simple insert statements since they lack concrete foreign key restraints
