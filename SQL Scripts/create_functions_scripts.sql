@@ -45,22 +45,6 @@ BEGIN
 
 END //
 DELIMITER ;
-
-DROP FUNCTION IF EXISTS detailsMemberID;
-DELIMITER //
-CREATE FUNCTION detailsMemberID(
-    receipt_id_search INT
-)
-RETURNS INT
-DETERMINISTIC
-BEGIN
-    DECLARE id INT;
-
-    SET id = (SELECT member_id FROM receipts WHERE receipt_id = receipt_id_search);
-
-    RETURN(id);
-END //
-DELIMITER ;
     
 
 DROP FUNCTION IF EXISTS receiptsStateName;
