@@ -96,3 +96,20 @@ BEGIN
 END //
 DELIMITER ;
 
+-- **************************************************
+-- FUNCTIONS/PROCEDURES SPECIFIC TO JAVA APPLICATIONS
+-- **************************************************
+DROP PROCEDURE IF EXISTS addItem;
+DELIMITER //
+CREATE PROCEDURE addItem(
+    given_upc VARCHAR(20),
+    given_name VARCHAR(200),
+    given_price DECIMAL(9,2),
+    given_discount DECIMAL(2,2)
+)
+BEGIN 
+    INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage) 
+    VALUES (given_upc, given_name, given_price, given_discount);
+END //
+DELIMITER ;
+
