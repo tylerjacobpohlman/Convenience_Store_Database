@@ -113,3 +113,74 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS addStore;
+DELIMITER //
+CREATE PROCEDURE addStore(
+    given_number CHAR(5),
+    given_street VARCHAR(50),
+    given_city VARCHAR(50),
+    given_state CHAR(2),
+    given_zip VARCHAR(20),
+    given_phone VARCHAR(20)
+)
+BEGIN
+    INSERT INTO stores (store_number, store_address, store_city, store_state, store_zip, store_phone)
+    VALUES (given_number, given_street, given_city, given_state, given_zip, given_phone);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS addCashier;
+DELIMITER //
+CREATE PROCEDURE addCashier(
+    given_store_number CHAR(5),
+    given_cashier_number CHAR(6),
+    given_first_name VARCHAR(32),
+    given_last_name VARCHAR(32)
+)
+BEGIN
+    INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name)
+    VALUES 
+    (
+    (SELECT store_id FROM stores WHERE store_number = given_store_number),
+    given_cashier_number,
+    given_first_name,
+    given_last_name
+    );
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS addRegister;
+DELIMITER //
+CREATE PROCEDURE addRegister(
+    given_store_number CHAR(5),
+    given_register_number VARCHAR(16),
+    register_type ENUM('Self', 'Clerk', 'Other')
+)
+BEGIN
+    INSERT INTO registers (store_id, register_number, register_type)
+    VALUES
+    (
+    (SELECT store_id FROM stores WHERE store_number = given_store_number),
+    given_register_number,
+    register_type
+    );
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS addMember;
+DELIMITER //
+CREATE PROCEDURE addMember(
+    given_account_number VARCHAR(20),
+    given_first_name VARCHAR(32),
+    given_last_name VARCHAR(32),
+    given_phone_number VARCHAR(16),
+    given_email_address VARCHAR(64)
+
+)
+BEGIN
+    INSERT INTO members (member_account_number, member_first_name, member_last_name,
+        member_phone_number, member_email_address)
+    VALUES (given_account_number, given_first_name, given_last_name,
+        given_phone_number, given_email_address);
+END //
+DELIMITER ;

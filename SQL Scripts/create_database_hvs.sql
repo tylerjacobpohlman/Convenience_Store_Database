@@ -63,7 +63,7 @@ CREATE TABLE registers
     register_number VARCHAR(16) NOT NULL UNIQUE,
     -- the type is important because self always use a SELF HELP cashier
     register_type ENUM('Self', 'Clerk', 'Other'),
-    -- The relationship to the stores table isn't necessarily needed, it just speeds up inquries since going from registers
+    -- The relationship to the stores table isn't necessarily needed, it just speeds up inquiries since going from registers
     -- to stores is faster than going from registers, to cashier_assignments, to cashiers, and then to store. Likewise, cashiers
     -- come and go, so having the relationship between stores and registers depend on cashiers can cause issues
     CONSTRAINT registers_fk_stores FOREIGN KEY (store_id) REFERENCES stores(store_id)
@@ -103,7 +103,7 @@ CREATE TABLE items
 -- items are scanned in order to pull it up from the table, so this index speeds up that process
 CREATE INDEX idx_upc
 ON items (item_upc);
--- CREATES TABLE MEMEBRS
+-- CREATES TABLE MEMBERS
 -- Basically, this stores whomever rewards members are. Rewards are able to access the given savings, 
 -- while nonmembers always pay the full price.
 CREATE TABLE members
@@ -119,7 +119,7 @@ CREATE TABLE members
     -- accumulative total of savings
     member_total_savings DECIMAL(12,2) DEFAULT 0.00
 );
--- phone number is used to look up rewards memebership, so it is indexed
+-- phone number is used to look up rewards membership, so it is indexed
 CREATE INDEX idx_phone
 ON members (member_phone_number);
 -- membership are also scanned in, which is basically just the account number
@@ -362,3 +362,92 @@ SET receipt_charge = receipt_total
 UPDATE receipts
 SET receipt_change_due = receipt_charge - receipt_total
 ;
+
+-- **************************************************
+-- FUNCTIONS/PROCEDURES SPECIFIC TO JAVA APPLICATIONS
+-- **************************************************
+-- addItem
+DELIMITER //
+CREATE PROCEDURE addItem(
+    given_upc VARCHAR(20),
+    given_name VARCHAR(200),
+    given_price DECIMAL(9,2),
+    given_discount DECIMAL(2,2)
+)
+BEGIN 
+    INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage) 
+    VALUES (given_upc, given_name, given_price, given_discount);
+END //
+DELIMITER ;
+
+-- addStore
+DELIMITER //
+CREATE PROCEDURE addStore(
+    given_number CHAR(5),
+    given_street VARCHAR(50),
+    given_city VARCHAR(50),
+    given_state CHAR(2),
+    given_zip VARCHAR(20),
+    given_phone VARCHAR(20)
+)
+BEGIN
+    INSERT INTO stores (store_number, store_address, store_city, store_state, store_zip, store_phone)
+    VALUES (given_number, given_street, given_city, given_state, given_zip, given_phone);
+END //
+DELIMITER ;
+
+-- addCashier
+DELIMITER //
+CREATE PROCEDURE addCashier(
+    given_store_number CHAR(5),
+    given_cashier_number CHAR(6),
+    given_first_name VARCHAR(32),
+    given_last_name VARCHAR(32)
+)
+BEGIN
+    INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name)
+    VALUES 
+    (
+    (SELECT store_id FROM stores WHERE store_number = given_store_number),
+    given_cashier_number,
+    given_first_name,
+    given_last_name
+    );
+END //
+DELIMITER ;
+
+-- addRegister
+DELIMITER //
+CREATE PROCEDURE addRegister(
+    given_store_number CHAR(5),
+    given_register_number VARCHAR(16),
+    register_type ENUM('Self', 'Clerk', 'Other')
+)
+BEGIN
+    INSERT INTO registers (store_id, register_number, register_type)
+    VALUES
+    (
+    (SELECT store_id FROM stores WHERE store_number = given_store_number),
+    given_register_number,
+    register_type
+    );
+END //
+DELIMITER ;
+
+-- addMember
+DELIMITER //
+CREATE PROCEDURE addMember(
+    given_account_number VARCHAR(20),
+    given_first_name VARCHAR(32),
+    given_last_name VARCHAR(32),
+    given_phone_number VARCHAR(16),
+    given_email_address VARCHAR(64)
+
+)
+BEGIN
+    INSERT INTO members (member_account_number, member_first_name, member_last_name,
+        member_phone_number, member_email_address)
+    VALUES (given_account_number, given_first_name, given_last_name,
+        given_phone_number, given_email_address);
+END //
+DELIMITER ;
