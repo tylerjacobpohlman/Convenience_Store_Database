@@ -75,13 +75,12 @@ CREATE TABLE registers
 -- logging out of registers many times a day.
 CREATE TABLE cashier_assignments
 (
-	assignment_sequence INT PRIMARY KEY AUTO_INCREMENT,
-    cashier_id INT NOT NULL,
-    register_id INT NOT NULL,
-    -- the the time window in which a cashier is assigned to a register
-    assignment_from DATETIME NOT NULL,
-    -- can be null if a cashier is currently assigned to register
-    assignment_to DATETIME,
+    -- automatically NOT NULL and UNIQUE
+    -- setup in such a way that there can be one register assigned
+	register_id INT PRIMARY KEY,
+    -- setup in such a way that a cashier can be assigned to multiple registers
+    -- Also, NULL value means the register is unassigned
+    cashier_id INT,
     CONSTRAINT details_fk_cashiers FOREIGN KEY (cashier_id) REFERENCES cashiers(cashier_id),
     CONSTRAINT details_fk_registers FOREIGN KEY (register_id) REFERENCES registers(register_id)
 );
@@ -251,10 +250,10 @@ BEGIN
 END //
 DELIMITER ;
 -- creates function receiptsCashierName for the receipts table
+-- function is only ever used when a new receipt is created, so the assignment is current and accurate
 DELIMITER //
 CREATE FUNCTION receiptsCashierName(
-    register_id_search INT,
-    given_datetime DATETIME
+    register_id_search INT
 )
 RETURNS VARCHAR(128)
 DETERMINISTIC
@@ -267,11 +266,32 @@ BEGIN
     -- joins the cashiers and cashier_assignments tables
     FROM cashier_assignments ca JOIN cashiers c ON ca.cashier_id = c.cashier_id
     -- checks if the date is during a previous assignment range, or checks if the date is during a current assignment
-    WHERE ( (given_datetime BETWEEN assignment_from AND assignment_to) OR (given_datetime > assignment_from AND assignment_to IS NULL) )
-    AND register_id = register_id_search
+    WHERE register_id = register_id_search
     );
 
     RETURN(name);
+END //
+DELIMITER ;
+
+-- ***************
+-- CREATE TRIGGERS
+-- ***************
+DELIMITER //
+CREATE TRIGGER cashier_assignments_after_update
+    BEFORE UPDATE ON cashier_assignments
+    FOR EACH ROW
+BEGIN
+    -- only limitation is that, if the register has a NULL cashier_id, then there will be a sign out
+    -- for a NULL cashier
+    INSERT INTO cashier_assignments_audit
+    VALUES (OLD.register_id, OLD.cashier_id, 'Sign out', NOW() );
+
+    INSERT INTO cashier_assignments_audit
+    VALUES (NEW.register_id, NEW.cashier_id, 'Sign in', NOW() );
+
+    -- fixes edge case, removing rows where a NULL employee logins
+    DELETE FROM cashier_assignments_audit
+    WHERE cashier_id IS NULL;
 END //
 DELIMITER ;
 
@@ -324,11 +344,11 @@ VALUES
 ('98567843567', 'Spencer', 'Kornspan', '(440)-642-7483', 'spencervenom@gmail.com'),
 ('74268343', 'Phillip', 'McCourt', '(312)-553-7890', 'prmc64@icloud.com')
 ;
-INSERT INTO cashier_assignments (cashier_id, register_id, assignment_from, assignment_to)
+INSERT INTO cashier_assignments (register_id, cashier_id)
 VALUES 
-(1, 1, '2020-04-01 00:00:00', NULL),
-(1, 2, '2020-04-01 00:00:00', NULL),
-(5, 4, '2023-04-08 13:00:00', '2023-04-12 20:59:59')
+(1, 1),
+(2, 1),
+(4, 5)
 ;
 
 -- *************************
@@ -336,9 +356,9 @@ VALUES
 -- *************************
 INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
 VALUES
-(1, 1, '67544567','2023-01-01 22:10:26', receiptsCashierName(1, '2023-01-01 22:10:26') ),
-(4, NULL, '444237778','2023-04-08 13:05:00', receiptsCashierName(4, '2023-04-08 13:05:00') ),
-(2, 3, '444238578', NOW(), receiptsCashierName(2, NOW() ) );
+(1, 1, '67544567','2023-01-01 22:10:26', receiptsCashierName(1) ),
+(4, NULL, '444237778','2023-04-08 13:05:00', receiptsCashierName(4) ),
+(2, 3, '444238578', NOW(), receiptsCashierName(2) );
 
 INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
 VALUES
