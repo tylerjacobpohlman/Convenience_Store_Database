@@ -141,10 +141,42 @@ public class DBTestApp {
                     }
                         break;
                     case 3:
+                        try {
+                            //variables used to grab user input
+                            String storeNumber;
+                            String registerNumber;
+                            String registerType;
+
+                            addRegisterMenu();
+
+                            System.out.print("Provided store number: ");
+                            sc.nextLine();
+                            storeNumber = sc.nextLine();
+                            System.out.print("Register number (must be six digits long): ");
+                            registerNumber = sc.nextLine();
+                            System.out.print("Register type ('Self', 'Cashier', 'Other'): ");
+                            registerType = sc.nextLine();
+
+                            Register potentialRegister = new Register(registerNumber, registerType, storeNumber);
+
+                            ps = connection.prepareStatement(potentialRegister.getInsertIntoDatabaseStatement() );
+                            ps.execute();
+                        } catch (SQLException f) {
+                            System.out.println(f.getMessage());
+
+                            //some issue with the scanner trying to grab data
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                            //stop endless looping
+                            System.out.println();
+                            sc.nextLine();
+                        }
                         break;
                     case 4:
                         break;
                     case 5:
+                        break;
+                    case 6:
                         //exits the program successfully
                         System.exit(0);
                     default:
