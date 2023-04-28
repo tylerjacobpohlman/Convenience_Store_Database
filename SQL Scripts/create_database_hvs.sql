@@ -168,6 +168,16 @@ CREATE TABLE receipt_details
     -- allowed because the two ids are always a unique combination
     CONSTRAINT pk_receipt_details PRIMARY KEY (receipt_id, item_id)
 );
+-- CREATES RECEIPT_DETAILS_AUDIT TABLE
+CREATE TABLE cashier_assignments_audit
+(
+    -- stores the assignments
+    register_id INT,
+    cashier_id INT,
+    -- stores the date of the change and what type change took place
+    action_type ENUM('Sign in', 'Sign out'),
+    action_date DATETIME DEFAULT NOW()
+);
 
 -- *****************
 -- CREATE FUNCTIONS
