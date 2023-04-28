@@ -6,7 +6,7 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class DBTestApp {
-    public static void main(String args[]) throws SQLException {
+    public static void main(String args[]) {
         
         //working in the hvs database
         String dbUrl = "jdbc:mysql://localhost:3306/hvs";
@@ -14,7 +14,7 @@ public class DBTestApp {
         String username;
         String password;
 
-        Connection connection;
+        Connection connection = null;
         PreparedStatement ps;
         ResultSet rs;
 
@@ -49,9 +49,6 @@ public class DBTestApp {
                 successfulLogin = false;
             }
         } while(!successfulLogin);
-
-        //have to fix, this is a slopping solution with main throwing an exception
-        connection = DriverManager.getConnection(dbUrl, username, password);
 
         int menuOption;
 
@@ -92,7 +89,7 @@ public class DBTestApp {
 
                     //some issue with the scanner trying to grab data
                     } catch (Exception e) {
-                        System.out.println("ERROR: Invalid input! Please try again...");
+                        System.out.println(e.getMessage());
                         //stop endless looping
                         System.out.println();
                         sc.nextLine();
@@ -137,7 +134,7 @@ public class DBTestApp {
 
                     //some issue with the scanner trying to grab data
                     } catch (Exception e) {
-                        System.out.println("ERROR: Invalid input! Please try again...");
+                        System.out.println(e.getMessage());
                         //stop endless looping
                         System.out.println();
                         sc.nextLine();
@@ -195,16 +192,17 @@ public class DBTestApp {
         System.out.println("2. Add a store to the database");
         System.out.println("3. Add a register to the database");
         System.out.println("4. Add a member to the database");
-        System.out.println("5. Exit program");
+        System.out.println("5. Add a cashier to the database");
+        System.out.println("6. Exit program");
     }
 
     public static void addItemMenu() {
         System.out.println();
-        System.out.println("-------------------------------------------");
-        System.out.println("NOTE: Item upc and item name must not already");
-        System.out.println("be contained in the database! Otherwise, the ");
-        System.out.println("item won't be added...");
-        System.out.println("-------------------------------------------");
+        System.out.println("------------------------------------------------");
+        System.out.println("NOTE: Item upc and/or item name must not already");
+        System.out.println("be contained in the database! Otherwise, the    ");
+        System.out.println("item won't be added...                          ");
+        System.out.println("------------------------------------------------");
         System.out.println();
         System.out.println("Enter the following details about the item:");
     }
@@ -218,5 +216,40 @@ public class DBTestApp {
         System.out.println("--------------------------------------------");
         System.out.println();
         System.out.println("Enter the following details about the item:");
+    }
+
+    public static void addRegisterMenu() {
+        System.out.println();
+        System.out.println("--------------------------------------------");
+        System.out.println("NOTE: The register number must not already  ");
+        System.out.println("be contained in the database! Otherwise, the");
+        System.out.println("register won't be added...                  ");
+        System.out.println("--------------------------------------------");
+        System.out.println();
+        System.out.println("Enter the following details about the register:");
+    }
+
+    public static void addMemberMenu() {
+        System.out.println();
+        System.out.println("--------------------------------------------");
+        System.out.println("NOTE: The account number, phone number, and ");
+        System.out.println("and email address must not already be       ");
+        System.out.println("contained in the database! Otherwise, the   ");
+        System.out.println("member won't be added...                    ");
+        System.out.println("--------------------------------------------");
+        System.out.println();
+        System.out.println("Enter the following details about the member:");
+    }
+
+    public static void addCashierMenu() {
+        System.out.println();
+        System.out.println("--------------------------------------------");
+        System.out.println("NOTE: The cashier number must not already be");
+        System.out.println("contained in the database! The store number,");
+        System.out.println("however, must be in the database. Otherwise,");
+        System.out.println("the cashier won't be added                  ");
+        System.out.println("--------------------------------------------");
+        System.out.println();
+        System.out.println("Enter the following details about the cashier:");
     }
 }
