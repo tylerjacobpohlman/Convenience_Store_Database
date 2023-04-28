@@ -409,7 +409,6 @@ BEGIN
     VALUES (given_upc, given_name, given_price, given_discount);
 END //
 DELIMITER ;
-
 -- addStore
 DELIMITER //
 CREATE PROCEDURE addStore(
@@ -425,7 +424,6 @@ BEGIN
     VALUES (given_number, given_street, given_city, given_state, given_zip, given_phone);
 END //
 DELIMITER ;
-
 -- addCashier
 DELIMITER //
 CREATE PROCEDURE addCashier(
@@ -445,25 +443,19 @@ BEGIN
     );
 END //
 DELIMITER ;
-
 -- addRegister
 DELIMITER //
 CREATE PROCEDURE addRegister(
     given_store_number CHAR(5),
     given_register_number VARCHAR(16),
-    register_type ENUM('Self', 'Clerk', 'Other')
+    given_register_type ENUM('Self','Clerk','Other')
 )
 BEGIN
     INSERT INTO registers (store_id, register_number, register_type)
-    VALUES
-    (
-    (SELECT store_id FROM stores WHERE store_number = given_store_number),
-    given_register_number,
-    register_type
-    );
+    VALUES ((SELECT store_id FROM stores WHERE store_number = given_store_number), 
+    given_register_number, given_register_type);
 END //
 DELIMITER ;
-
 -- addMember
 DELIMITER //
 CREATE PROCEDURE addMember(
@@ -472,7 +464,6 @@ CREATE PROCEDURE addMember(
     given_last_name VARCHAR(32),
     given_phone_number VARCHAR(16),
     given_email_address VARCHAR(64)
-
 )
 BEGIN
     INSERT INTO members (member_account_number, member_first_name, member_last_name,

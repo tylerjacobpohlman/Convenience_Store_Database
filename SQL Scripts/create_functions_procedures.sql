@@ -154,16 +154,12 @@ DELIMITER //
 CREATE PROCEDURE addRegister(
     given_store_number CHAR(5),
     given_register_number VARCHAR(16),
-    register_type ENUM('Self', 'Clerk', 'Other')
+    given_register_type ENUM('Self', 'Clerk', 'Other')
 )
 BEGIN
     INSERT INTO registers (store_id, register_number, register_type)
-    VALUES
-    (
-    (SELECT store_id FROM stores WHERE store_number = given_store_number),
-    given_register_number,
-    register_type
-    );
+    VALUES ( (SELECT store_id FROM stores WHERE store_number = given_store_number),
+    given_register_number, given_register_type);
 END //
 DELIMITER ;
 
