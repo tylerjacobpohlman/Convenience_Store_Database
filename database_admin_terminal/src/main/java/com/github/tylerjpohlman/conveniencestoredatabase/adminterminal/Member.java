@@ -1,6 +1,6 @@
 package com.github.tylerjpohlman.conveniencestoredatabase.adminterminal;
 
-public class Member {
+public class Member implements SQLScripts{
     private String accountNumber;
     private String firstName;
     private String lastName;
@@ -53,6 +53,11 @@ public class Member {
     public double getTotalSavings() {
         return totalSavings;
     }
-    
-    
+
+
+    @Override
+    public String getInsertIntoDatabaseStatement() {
+        return "CALL addMember('" + accountNumber + "', '" + firstName + "', '" + lastName + "', '"
+                + phoneNumber + "', '" + email + "')";
+    }
 }

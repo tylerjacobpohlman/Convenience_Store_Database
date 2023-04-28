@@ -173,6 +173,43 @@ public class DBTestApp {
                         }
                         break;
                     case 4:
+                        try {
+                            //variables used to grab user input
+                            String accountNumber;
+                            String firstName;
+                            String lastName;
+                            String email;
+                            String phoneNumber;
+
+                            addMemberMenu();
+
+                            System.out.print("Account number: ");
+                            sc.nextLine();
+                            accountNumber = sc.nextLine();
+                            System.out.print("First name: ");
+                            firstName = sc.nextLine();
+                            System.out.print("Last name: ");
+                            lastName = sc.nextLine();
+                            System.out.print("Email: ");
+                            email = sc.nextLine();
+                            System.out.print("Phone number: ");
+                            //removes all the misc. chars when someone types in a phone number and just keeps the digits
+                            phoneNumber = sc.nextLine().replaceAll("[^0-9]", "");
+
+                            Member potentialMember = new Member(accountNumber, firstName, lastName, phoneNumber, email);
+
+                            ps = connection.prepareStatement(potentialMember.getInsertIntoDatabaseStatement() );
+                            ps.execute();
+                        } catch (SQLException f) {
+                            System.out.println(f.getMessage());
+
+                            //some issue with the scanner trying to grab data
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                            //stop endless looping
+                            System.out.println();
+                            sc.nextLine();
+                        }
                         break;
                     case 5:
                         break;
