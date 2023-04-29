@@ -201,23 +201,34 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP FUNCTION IF EXISTS storeAddressLookup;
+DROP PROCEDURE IF EXISTS storeAddressLookup;
 DELIMITER //
-CREATE FUNCTION storeAddressLookupFromRegister(
+CREATE PROCEDURE storeAddressLookupFromRegister(
     given_register_number VARCHAR(16)
 )
-RETURNS VARCHAR(122)
-DETERMINISTIC
 BEGIN
-    DECLARE address VARCHAR(122);
-
-    SET address = 
-    (
     SELECT CONCAT(store_address, ', ', store_city, ', ', store_state, ' ', store_zip)
     FROM stores
     WHERE store_id = (SELECT store_id FROM registers WHERE register_number = given_register_number)
-    );
+    ;
 
-    RETURN(address);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS itemUPCLookup;
+DELIMITER //
+CREATE PROCEDURE itemUPCLookup(
+    given_upc VARCHAR(20)
+)
+BEGIN
+    -- creates exception for invalid upc
+    DECLARE no_such_upc CONDITION FOR SQLSTATE '45001';
+    IF given_upc NOT IN (SELECT item_upc FROM items) 
+    THEN
+        SIGNAL no_such_upc SET MESSAGE_TEXT = 'No such item_upc exists';
+    END IF;
+    SELECT item_name, item_price, item_discount_percentage
+    FROM items
+    WHERE item_upc = given_upc;
 END //
 DELIMITER ;
