@@ -180,3 +180,23 @@ BEGIN
         given_phone_number, given_email_address);
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS cashierRegisterLogin;
+DELIMITER //
+CREATE PROCEDURE cashierRegisterLogin(
+    given_cashier_number CHAR(6),
+    given_register_number VARCHAR(16)
+)
+BEGIN
+    -- creates exception for invalid register_id and/or cashier_id
+    DECLARE no_such_register_cashier CONDITION FOR SQLSTATE '45000';
+    IF given_cashier_number NOT IN (SELECT cashier_number FROM cashiers) 
+    OR given_register_number NOT IN (SELECT register_number FROM registers) THEN
+        SIGNAL no_such_register_cashier SET MESSAGE_TEXT = 'No such register_id and/or cashier_id exists';
+    END IF;
+
+    UPDATE cashier_assignments
+    SET cashier_id = (SELECT cashier_id FROM cashiers WHERE cashier_number = given_cashier_number)
+    WHERE register_id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
+END //
+DELIMITER ;
