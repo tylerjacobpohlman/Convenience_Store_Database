@@ -482,6 +482,7 @@ BEGIN
         given_phone_number, given_email_address);
 END //
 DELIMITER ;
+-- cashierRegisterLogin
 DELIMITER //
 CREATE PROCEDURE cashierRegisterLogin(
     given_cashier_number CHAR(6),
@@ -498,6 +499,26 @@ BEGIN
     UPDATE cashier_assignments
     SET cashier_id = (SELECT cashier_id FROM cashiers WHERE cashier_number = given_cashier_number)
     WHERE register_id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
+END //
+DELIMITER ;
+-- storeAddressLookupFromRegister
+DELIMITER //
+CREATE FUNCTION storeAddressLookupFromRegister(
+    given_register_number VARCHAR(16)
+)
+RETURNS VARCHAR(122)
+DETERMINISTIC
+BEGIN
+    DECLARE address VARCHAR(122);
+
+    SET address = 
+    (
+    SELECT CONCAT(store_address, ', ', store_city, ', ', store_state, ' ', store_zip)
+    FROM stores
+    WHERE store_id = (SELECT store_id FROM registers WHERE register_number = given_register_number)
+    );
+
+    RETURN(address);
 END //
 DELIMITER ;
 
