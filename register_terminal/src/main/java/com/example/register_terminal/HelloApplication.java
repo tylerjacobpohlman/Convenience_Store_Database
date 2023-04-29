@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -25,13 +26,16 @@ public class HelloApplication extends Application {
     String password;
     String cashierNum;
     String registerNum;
-    Connection connection = null;
+    Connection connection;
     PreparedStatement ps;
     ResultSet rs;
     @Override
     public void start(Stage stage) throws IOException {
         AnchorPane introductionPane = new AnchorPane();
         Scene introductionScene = new Scene(introductionPane, 800, 600);
+
+        AnchorPane mainPane = new AnchorPane();
+        Scene mainScene = new Scene(mainPane, 800, 600);
 
         /*
          * ITEMS USED FOR INTRODUCTION SCENE
@@ -74,11 +78,30 @@ public class HelloApplication extends Application {
         AnchorPane.setBottomAnchor(introductionErrorLabel, 60.0);
 
         /*
+         * ITEMS USED FOR MAIN SCENE
+         */
+
+        Label addressLabel = new Label();
+        AnchorPane.setLeftAnchor(addressLabel, 40.0);
+        AnchorPane.setTopAnchor(addressLabel, 20.0);
+        ListView<Item> addedItems = new ListView<>();
+        AnchorPane.setLeftAnchor(addedItems, 40.0);
+        AnchorPane.setTopAnchor(addedItems, 60.0);
+        Label addItemByUPCLabel = new Label("Item UPC:");
+        AnchorPane.setLeftAnchor(addItemByUPCLabel, 40.0);
+        AnchorPane.setBottomAnchor(addItemByUPCLabel, 80.0);
+        TextField addItemByUPCTextField = new TextField();
+        AnchorPane.setLeftAnchor(addItemByUPCTextField, 40.0);
+        AnchorPane.setBottomAnchor(addItemByUPCTextField, 40.0);
+
+        /*
          * INTRODUCTION SCENE
          */
         introductionPane.getChildren().addAll(introductionLabel, introductionSubLabel, usernameLabel, usernameTextField,
                 passwordLabel, passwordTextField, registerNumLabel, registerNumTextField, employeeNumLabel,
                 employeeNumTextField, introductionEnterButton, introductionErrorLabel);
+        stage.setScene(introductionScene);
+        //button click
         introductionEnterButton.setOnAction(ActionEvent -> {
             try {
                 //resets the error label
@@ -98,9 +121,28 @@ public class HelloApplication extends Application {
                     connection = DriverManager.getConnection(dbUrl, username, password);
 
                     //ties the login procedure from the database
-                    String query = "CALL cashierRegisterLogin('" + cashierNum + "', '" + registerNum + "')";
-                    ps = connection.prepareStatement(query);
+                    String login = "CALL cashierRegisterLogin('" + cashierNum + "', '" + registerNum + "')";
+                    ps = connection.prepareStatement(login);
                     ps.execute();
+
+                    //if all goes well, on to the next scene!
+                    mainPane.getChildren().addAll(addressLabel, addedItems, addItemByUPCLabel, addItemByUPCTextField);
+                    stage.setScene(mainScene);
+
+                    //grabs the address using the registerID
+                    //NOTE: This is incredibly sloppy! I wasn't sure how to grab the result of a function, so I turned
+                    // storeAddressLookupFromRegister into a procedure and grabbed the address this way
+                    try {
+                        String addressLookup = "Call storeAddressLookupFromRegister('" + registerNum + "')";
+                        ps = connection.prepareStatement(addressLookup);
+                        //stores the address in the result set
+                        rs = ps.executeQuery();
+                        while(rs.next() ) {
+                            addressLabel.setText(rs.getString(1) );
+                        }
+                    } catch (SQLException e) {
+                        addressLabel.setText("ERROR: Unable to find address\nPlease contact IT specialist");
+                    }
                 }
             //any error connecting to the database and/or executing the query
             } catch (SQLException e) {
@@ -113,7 +155,6 @@ public class HelloApplication extends Application {
         });
 
         stage.setTitle("Hello!");
-        stage.setScene(introductionScene);
         stage.show();
     }
 
