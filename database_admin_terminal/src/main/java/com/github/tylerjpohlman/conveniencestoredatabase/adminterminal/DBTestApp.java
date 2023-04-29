@@ -212,6 +212,39 @@ public class DBTestApp {
                         }
                         break;
                     case 5:
+                        try {
+                            //variables used to grab user input
+                            String storeNumber;
+                            String cashierNumber;
+                            String firstName;
+                            String lastName;
+
+                            addCashierMenu();
+
+                            System.out.print("Provided store number: ");
+                            sc.nextLine();
+                            storeNumber = sc.nextLine();
+                            System.out.print("First name: ");
+                            firstName = sc.nextLine();
+                            System.out.print("Last name: ");
+                            lastName = sc.nextLine();
+                            System.out.print("Cashier Number: ");
+                            cashierNumber = sc.nextLine();
+
+                            Cashier potentialCashier = new Cashier(storeNumber, cashierNumber, firstName, lastName);
+
+                            ps = connection.prepareStatement(potentialCashier.getInsertIntoDatabaseStatement() );
+                            ps.execute();
+                        } catch (SQLException f) {
+                            System.out.println(f.getMessage());
+
+                            //some issue with the scanner trying to grab data
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                            //stop endless looping
+                            System.out.println();
+                            sc.nextLine();
+                        }
                         break;
                     case 6:
                         //exits the program successfully
@@ -231,18 +264,6 @@ public class DBTestApp {
 
             //loops indefinitely until option 5 is entered
         } while(true);
-
-
-
-
-        
-
-
-
-
-
-
-      
     }
 
     public static void introMenu() {
