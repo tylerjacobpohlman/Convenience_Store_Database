@@ -333,11 +333,21 @@ VALUES
 ;
 INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage)
 VALUES 
-('4334523', 'Sprite Zero Lemon-Lime Soda 20 fl oz', 2.59, 0.0),
-('42352345324532', 'Owyn 20 g Plant-Based Drink Dark Chocolate 12 fl oz', 3.69, 0.10),
+('4334523664435', 'Sprite Zero Lemon-Lime Soda 20 fl oz', 2.59, 0.0),
+('4235234532453', 'Owyn 20 g Plant-Based Drink Dark Chocolate 12 fl oz', 3.69, 0.10),
 ('8764353453456', '	Eboost Super Fuel Energy Drink Sparkling Blue Raspberry 11.5 fl oz', 2.99, 0.50),
-('9723456897324', 'Met-Rx Crispy Apple Pie Meal Replacement Bar 3.52 oz', 3.59, 0.35)
-;
+('9723456897324', 'Met-Rx Crispy Apple Pie Meal Replacement Bar 3.52 oz', 3.59, 0.35),
+('1224321345435', 'Gold Emblem Abound Dried Organic Mango 4 oz', 2.99, 0.33),
+('3232321323444', 'Wrigley Extra Long Lasting Flavor Sugarfree Gum Peppermint 15 sticks', 1.59, 0.0),
+('3245345253464', 'Pepto-Bismol 5 Symptom Relief Liquid 4 fl oz', 4.99, 0.0),
+('3245786342577', 'MT DEW CD RED BTL 20Z', 2.59, 0.15),
+('4378345897689', 'Buncha Crunch Bunches Of Crunchy Milk Chocolate 8 oz', 4.79, 0.0),
+('2349082345999', 'TRLI SR DUO CRWLRS 6.3Z', 3.99, 0.0),
+('3287237327771', 'pH Perfect Hydration Alkaline Water 12 pack 202 fl oz', 11.99, 0.10),
+('9083458976342', 'Life Savers Mints Wint O Green 6.25 oz', 3.59, 0.0),
+('2347863425897', 'Swiffer Heavy Duty Dusters 3 dusters', 6.99, 0.0),
+('0980983425980', 'Lysol Disinfecting Wipes Lemon & Lime Blossom 80 wet wipes 20.3 oz', 10.29, 0.0);
+
 INSERT INTO members (member_account_number, member_first_name, member_last_name, member_phone_number, member_email_address)
 VALUES
 ('456365', 'Tyler', 'Pohlman', '(216) 970-0354', 'tylerjacobpohlman@gmail.com'),
