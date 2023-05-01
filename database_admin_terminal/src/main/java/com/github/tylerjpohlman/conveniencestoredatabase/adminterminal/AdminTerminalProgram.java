@@ -13,7 +13,6 @@ public class AdminTerminalProgram {
         //shouldn't use root, will change to proper credentials once created
         String username;
         String password;
-
         Connection connection = null;
         PreparedStatement ps;
         ResultSet rs;
