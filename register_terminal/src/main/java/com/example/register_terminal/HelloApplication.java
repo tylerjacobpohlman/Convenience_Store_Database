@@ -152,7 +152,7 @@ public class HelloApplication extends Application {
         TextField phoneNumberTextField = new TextField();
         AnchorPane.setLeftAnchor(phoneNumberTextField, 40.0);
         AnchorPane.setTopAnchor(phoneNumberTextField, 120.0);
-        Label memberIDLookupLabel = new Label("Member ID");
+        Label memberIDLookupLabel = new Label("Member ID:");
         AnchorPane.setLeftAnchor(memberIDLookupLabel, 40.0);
         AnchorPane.setTopAnchor(memberIDLookupLabel, 160.0);
         TextField memberIDTextField = new TextField();
