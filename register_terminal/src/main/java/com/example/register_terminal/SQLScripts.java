@@ -4,6 +4,8 @@ public interface SQLScripts {
 
     public abstract String getInsertIntoDatabaseStatement();
 
+    //public abstract String lookupFromDatabaseStatement();
+
     //public abstract String removeFrom();
     
 }
