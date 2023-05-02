@@ -254,3 +254,25 @@ BEGIN
     WHERE member_phone_number = given_phone_number;
 END //
 DELIMITER ;   
+
+-- here to grab first and last name, and produce an error if no matching account
+-- number is found
+DROP PROCEDURE IF EXISTS memberAccountNumberLookup;
+DELIMITER //
+CREATE PROCEDURE memberAccountNumberLookup(
+    given_account_number VARCHAR(20)
+)
+BEGIN
+    -- creates exception member no matching member is found
+    DECLARE no_such_account_num CONDITION FOR SQLSTATE '45000';
+
+    IF given_account_number NOT IN (SELECT member_account_number FROM members)
+    THEN
+        SIGNAL no_such_account_num SET MESSAGE_TEXT = 'No such account_number exists';
+    END IF;
+
+    SELECT member_first_name, member_last_name
+    FROM members
+    WHERE member_account_number = given_account_number;
+END //
+DELIMITER ;  
