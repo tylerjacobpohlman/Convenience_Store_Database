@@ -92,6 +92,9 @@ public class HelloApplication extends Application {
         Label introductionErrorLabel = new Label();
         AnchorPane.setRightAnchor(introductionErrorLabel, 150.0);
         AnchorPane.setBottomAnchor(introductionErrorLabel, 60.0);
+        introductionPane.getChildren().addAll(introductionLabel, introductionSubLabel, usernameLabel, usernameTextField,
+                passwordLabel, passwordTextField, registerNumLabel, registerNumTextField, employeeNumLabel,
+                employeeNumTextField, introductionEnterButton, introductionErrorLabel);
 
         /*
          * ITEMS USED FOR MAIN SCENE
@@ -124,13 +127,13 @@ public class HelloApplication extends Application {
         Label mainMenuErrorLabel = new Label("");
         AnchorPane.setRightAnchor(mainMenuErrorLabel, 40.0);
         AnchorPane.setBottomAnchor(mainMenuErrorLabel, 60.0);
+        mainPane.getChildren().addAll(addressLabel, addedItems, addItemByUPCLabel, addItemByUPCTextField,
+                addItemByUPCButton, memeberLookupButton, itemLookupButton, finishAndPayButton,
+                mainMenuErrorLabel);
 
         /*
          * INTRODUCTION SCENE
          */
-        introductionPane.getChildren().addAll(introductionLabel, introductionSubLabel, usernameLabel, usernameTextField,
-                passwordLabel, passwordTextField, registerNumLabel, registerNumTextField, employeeNumLabel,
-                employeeNumTextField, introductionEnterButton, introductionErrorLabel, mainMenuErrorLabel);
         stage.setScene(introductionScene);
         //button click
         introductionEnterButton.setOnAction(ActionEvent -> {
@@ -172,8 +175,6 @@ public class HelloApplication extends Application {
                     }
 
                     //if all goes well, on to the next scene!
-                    mainPane.getChildren().addAll(addressLabel, addedItems, addItemByUPCLabel, addItemByUPCTextField,
-                            addItemByUPCButton, memeberLookupButton, itemLookupButton, finishAndPayButton);
                     stage.setScene(mainScene);
                 }
             //any error connecting to the database and/or executing the query
@@ -190,35 +191,47 @@ public class HelloApplication extends Application {
          * MAIN SCENE
          */
         addItemByUPCButton.setOnAction(ActionEvent -> {
-            //reset the error label
-            mainMenuErrorLabel.setText("");
+            //checks if there's any text at all
+            if(addItemByUPCTextField.getText().isEmpty() ) {
+                mainMenuErrorLabel.setText("Please type in the UPC number first");
+            }
+            else {
+                //reset the error label
+                mainMenuErrorLabel.setText("");
 
-            //elements of the Item to grab
-            String upc = addItemByUPCTextField.getText();
-            String name = null;
-            double price = 0;
-            double discount = 0;
+                //elements of the Item to grab
+                String upc = addItemByUPCTextField.getText();
+                String name = null;
+                double price = 0;
+                double discount = 0;
 
-            try {
-                String itemUPCLookup = "Call itemUPCLookup('" + upc + "')";
-                ps = connection.prepareStatement(itemUPCLookup);
-                //stores the address in the result set
-                rs = ps.executeQuery();
-                while(rs.next() ) {
-                    name = rs.getString(1);
-                    price = rs.getDouble(2);
-                    discount = rs.getDouble(3);
+                try {
+                    String itemUPCLookup = "Call itemUPCLookup('" + upc + "')";
+                    ps = connection.prepareStatement(itemUPCLookup);
+                    //stores the address in the result set
+                    rs = ps.executeQuery();
+                    while (rs.next()) {
+                        name = rs.getString(1);
+                        price = rs.getDouble(2);
+                        discount = rs.getDouble(3);
+                    }
+
+                    //creates a new Item given the grabbed attributes
+                    addedItems.getItems().add(new Item(upc, name, price, discount));
+
+                    //blank out the upc text field
+                    addItemByUPCTextField.setText("");
+
+                } catch (SQLException e) {
+                    mainMenuErrorLabel.setText("Unable to find Item with given upc");
                 }
-
-                //creates a new Item given the grabbed attributes
-                addedItems.getItems().add(new Item(upc, name, price, discount) );
-
-
-            } catch (SQLException e) {
-                mainMenuErrorLabel.setText("Error: Unable to find Item with given upc");
             }
 
+
+
         });
+
+
 
         stage.setTitle("Hello!");
         stage.show();
