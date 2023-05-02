@@ -135,7 +135,8 @@ CREATE PROCEDURE addCashier(
     given_store_number CHAR(5),
     given_cashier_number CHAR(6),
     given_first_name VARCHAR(32),
-    given_last_name VARCHAR(32)
+    given_last_name VARCHAR(32),
+    given_
 )
 BEGIN
     INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name)
@@ -201,7 +202,7 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS storeAddressLookup;
+DROP PROCEDURE IF EXISTS storeAddressLookupFromRegister;
 DELIMITER //
 CREATE PROCEDURE storeAddressLookupFromRegister(
     given_register_number VARCHAR(16)

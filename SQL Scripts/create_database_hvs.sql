@@ -551,6 +551,18 @@ BEGIN
 END //
 DELIMITER ;
 
+-- *****
+-- ROLES
+-- *****
+-- cashier 
+CREATE ROLE IF NOT EXISTS cashier;
+-- given the procedures used in the cashier terminal application
+GRANT EXECUTE ON PROCEDURE storeAddressLookupFromRegister TO cashier;
+GRANT EXECUTE ON PROCEDURE itemUPCLookup TO cashier;
+GRANT EXECUTE ON PROCEDURE memberPhoneLookup TO cashier;
+GRANT EXECUTE ON PROCEDURE memberAccountNumberLookup TO cashier;
+
+
 -- ********
 -- TRIGGERS
 -- ********
