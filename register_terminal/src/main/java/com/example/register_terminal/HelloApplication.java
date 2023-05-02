@@ -30,16 +30,22 @@ public class HelloApplication extends Application {
     PreparedStatement ps;
     ResultSet rs;
 
-    //stores memberID for future use
-    String memberID = null;
+    //stored as null by default to indicate no membership is provided
+    Member givenMember = null;
 
     @Override
     public void start(Stage stage) throws IOException {
+        //INTRODUCTION SCENE
         AnchorPane introductionPane = new AnchorPane();
         Scene introductionScene = new Scene(introductionPane, 800, 600);
 
+        //MAIN MENU PANE
         AnchorPane mainPane = new AnchorPane();
         Scene mainScene = new Scene(mainPane, 800, 600);
+
+        //MEMBER ID PANE
+        AnchorPane memberIDPane = new AnchorPane();
+        Scene memberIDScene = new Scene(memberIDPane, 800, 600);
 
         /*
          * ITEMS USED FOR INTRODUCTION SCENE
@@ -127,9 +133,42 @@ public class HelloApplication extends Application {
         Label mainMenuErrorLabel = new Label("");
         AnchorPane.setRightAnchor(mainMenuErrorLabel, 40.0);
         AnchorPane.setBottomAnchor(mainMenuErrorLabel, 60.0);
+        Label mainMenuMemberStatus = new Label("");
+        AnchorPane.setRightAnchor(mainMenuMemberStatus, 40.0);
+        AnchorPane.setBottomAnchor(mainMenuMemberStatus, 300.0);
         mainPane.getChildren().addAll(addressLabel, addedItems, addItemByUPCLabel, addItemByUPCTextField,
                 addItemByUPCButton, memeberLookupButton, itemLookupButton, finishAndPayButton,
-                mainMenuErrorLabel);
+                mainMenuErrorLabel, mainMenuMemberStatus);
+
+        /*
+         * ITEMS USED FOR MEMBER ID LOOKUP SCENE
+         */
+        Label memberIDLabel = new Label("Member ID Lookup\nEnter phone number/member ID number below");
+        AnchorPane.setLeftAnchor(addressLabel, 40.0);
+        AnchorPane.setTopAnchor(addressLabel, 20.0);
+        Label phoneNumberLabel = new Label("Phone Number:");
+        AnchorPane.setLeftAnchor(phoneNumberLabel, 40.0);
+        AnchorPane.setTopAnchor(phoneNumberLabel, 100.0);
+        TextField phoneNumberTextField = new TextField();
+        AnchorPane.setLeftAnchor(phoneNumberTextField, 40.0);
+        AnchorPane.setTopAnchor(phoneNumberTextField, 120.0);
+        Label memberIDLookupLabel = new Label("Member ID");
+        AnchorPane.setLeftAnchor(memberIDLookupLabel, 40.0);
+        AnchorPane.setTopAnchor(memberIDLookupLabel, 160.0);
+        TextField memberIDTextField = new TextField();
+        AnchorPane.setLeftAnchor(memberIDTextField, 40.0);
+        AnchorPane.setTopAnchor(memberIDTextField, 180.0);
+        Button memberIDEnterButton = new Button("ENTER");
+        AnchorPane.setLeftAnchor(memberIDEnterButton, 120.0);
+        AnchorPane.setTopAnchor(memberIDEnterButton, 340.0);
+        Button memberIDGoBackButton = new Button("GO BACK");
+        AnchorPane.setLeftAnchor(memberIDGoBackButton, 40.0);
+        AnchorPane.setTopAnchor(memberIDGoBackButton, 340.0);
+        Label memberIDErrorLabel = new Label("");
+        AnchorPane.setRightAnchor(memberIDErrorLabel, 40.0);
+        AnchorPane.setBottomAnchor(memberIDErrorLabel, 60.0);
+        memberIDPane.getChildren().addAll(memberIDLabel, phoneNumberLabel, phoneNumberTextField, memberIDLookupLabel,
+                memberIDTextField, memberIDEnterButton, memberIDGoBackButton, memberIDErrorLabel);
 
         /*
          * INTRODUCTION SCENE
@@ -191,13 +230,15 @@ public class HelloApplication extends Application {
          * MAIN SCENE
          */
         addItemByUPCButton.setOnAction(ActionEvent -> {
+            //reset the error label
+            mainMenuErrorLabel.setText("");
+
             //checks if there's any text at all
             if(addItemByUPCTextField.getText().isEmpty() ) {
                 mainMenuErrorLabel.setText("Please type in the UPC number first");
             }
             else {
-                //reset the error label
-                mainMenuErrorLabel.setText("");
+
 
                 //elements of the Item to grab
                 String upc = addItemByUPCTextField.getText();
@@ -226,9 +267,90 @@ public class HelloApplication extends Application {
                     mainMenuErrorLabel.setText("Unable to find Item with given upc");
                 }
             }
+        });
+        memeberLookupButton.setOnAction(ActionEvent -> {
+            stage.setScene(memberIDScene);
+        });
 
+        /*
+         * MEMBER ID LOOKUP SCENE
+         */
+        memberIDGoBackButton.setOnAction(ActionEvent -> {
+            stage.setScene(mainScene);
+        });
+        memberIDEnterButton.setOnAction(ActionEvent -> {
+            //reset the error label
+            memberIDErrorLabel.setText("");
 
+            //if there's any entered text
+            if (phoneNumberTextField.getText().isEmpty() && memberIDTextField.getText().isEmpty()) {
+                memberIDErrorLabel.setText("Please enter either a member number or phone number.");
 
+            }
+            //if there's a phone number provided
+            else if(!phoneNumberTextField.getText().isEmpty()){
+                //grabs the phone number
+                //also removes all the misc. chars when someone types in a phone number and just keeps the digits
+                String phoneNumber = phoneNumberTextField.getText().replaceAll("[^0-9]", "");;
+
+                String memberPhoneLookup = "Call memberPhoneLookup('" + phoneNumber + "')";
+
+                //elements of the member to add
+                String accountNum;
+                String firstName;
+                String lastName;
+
+                try {
+                    ps = connection.prepareStatement(memberPhoneLookup);
+                    //stores the member in the result set
+                    rs = ps.executeQuery();
+                    while(rs.next() ) {
+                        accountNum = rs.getString(1);
+                        firstName = rs.getString(2);
+                        lastName = rs.getString(3);
+                        //initializes the member using the grabbed attributes
+                        givenMember = new Member(accountNum, firstName, lastName);
+                    }
+                    //shows the membership in the main menu and sets the scene in the main menu
+                    mainMenuMemberStatus.setText(givenMember.toString());
+                    stage.setScene(mainScene);
+
+                } catch (SQLException e) {
+                    memberIDErrorLabel.setText("Unable to find membership with provided phone number");
+                }
+            }
+            //if only the account number is provided
+            else {
+                //grabs the account number
+                String accountNum = memberIDTextField.getText();
+
+                String memberPhoneLookup = "Call memberAccountNumberLookup('" + accountNum + "')";
+
+                //elements of the member to add
+                String firstName;
+                String lastName;
+
+                try {
+                    ps = connection.prepareStatement(memberPhoneLookup);
+                    rs = ps.executeQuery();
+                    while(rs.next() ) {
+                        firstName = rs.getString(1);
+                        lastName = rs.getString(2);
+                        //initializes the member using the grabbed attributes
+                        givenMember = new Member(accountNum, firstName, lastName);
+                    }
+                    //shows the membership in the main menu and sets the scene in the main menu
+                    mainMenuMemberStatus.setText(givenMember.toString());
+                    stage.setScene(mainScene);
+                }
+                catch (SQLException e) {
+                    memberIDErrorLabel.setText("Unable to find membership with provided account number");
+                }
+            }
+
+            //resets the text fields
+            phoneNumberTextField.setText("");
+            memberIDTextField.setText("");
         });
 
 
