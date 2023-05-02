@@ -232,3 +232,25 @@ BEGIN
     WHERE item_upc = given_upc;
 END //
 DELIMITER ;
+
+-- This procedure mainly exists to produce an error if there isn't a matching
+-- phone number.
+DROP PROCEDURE IF EXISTS memberPhoneLookup;
+DELIMITER //
+CREATE PROCEDURE memberPhoneLookup(
+    given_phone_number VARCHAR(16)
+)
+BEGIN
+    -- creates exception member no matching member is found
+    DECLARE no_such_member CONDITION FOR SQLSTATE '45000';
+
+    IF given_phone_number NOT IN (SELECT member_phone_number FROM members)
+    THEN
+        SIGNAL no_such_member SET MESSAGE_TEXT = 'No such phone_number exists';
+    END IF;
+
+    SELECT member_account_number, member_first_name, member_last_name
+    FROM members
+    WHERE member_phone_number = given_phone_number;
+END //
+DELIMITER ;   

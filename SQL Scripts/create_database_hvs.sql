@@ -350,9 +350,9 @@ VALUES
 
 INSERT INTO members (member_account_number, member_first_name, member_last_name, member_phone_number, member_email_address)
 VALUES
-('456365', 'Tyler', 'Pohlman', '(216) 970-0354', 'tylerjacobpohlman@gmail.com'),
-('98567843567', 'Spencer', 'Kornspan', '(440)-642-7483', 'spencervenom@gmail.com'),
-('74268343', 'Phillip', 'McCourt', '(312)-553-7890', 'prmc64@icloud.com')
+('456365', 'Tyler', 'Pohlman', '2169700354', 'tylerjacobpohlman@gmail.com'),
+('98567843567', 'Spencer', 'Kornspan', '4406427483', 'spencervenom@gmail.com'),
+('74268343', 'Phillip', 'McCourt', '3125537890', 'prmc64@icloud.com')
 ;
 INSERT INTO cashier_assignments (register_id, cashier_id)
 VALUES 
@@ -529,6 +529,25 @@ BEGIN
     SELECT item_name, item_price, item_discount_percentage
     FROM items
     WHERE item_upc = given_upc;
+END //
+DELIMITER ;
+-- memberPhoneLookup
+DELIMITER //
+CREATE PROCEDURE memberPhoneLookup(
+    given_phone_number VARCHAR(16)
+)
+BEGIN
+    -- creates exception member no matching member is found
+    DECLARE no_such_member CONDITION FOR SQLSTATE '45000';
+
+    IF given_phone_number NOT IN (SELECT member_phone_number FROM members)
+    THEN
+        SIGNAL no_such_member SET MESSAGE_TEXT = 'No such phone_number exists';
+    END IF;
+
+    SELECT member_account_number, member_first_name, member_last_name
+    FROM members
+    WHERE member_phone_number = given_phone_number;
 END //
 DELIMITER ;
 
