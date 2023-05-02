@@ -24,12 +24,12 @@ public class HelloApplication extends Application {
     //shouldn't use root, will change to proper credentials once created
     String username;
     String password;
+    //will change to proper login with each cashier having an individual user account
     String cashierNum;
     String registerNum;
     Connection connection;
     PreparedStatement ps;
     ResultSet rs;
-
     //stored as null by default to indicate no membership is provided
     Member givenMember = null;
 
