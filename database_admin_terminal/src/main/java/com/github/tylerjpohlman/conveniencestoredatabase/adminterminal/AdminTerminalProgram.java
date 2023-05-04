@@ -215,6 +215,7 @@ public class AdminTerminalProgram {
                             String cashierNumber;
                             String firstName;
                             String lastName;
+                            String cashierPassword;
 
                             addCashierMenu();
 
@@ -227,10 +228,28 @@ public class AdminTerminalProgram {
                             lastName = sc.nextLine();
                             System.out.print("Cashier Number: ");
                             cashierNumber = sc.nextLine();
+                            System.out.print("Password: ");
+                            cashierPassword = sc.nextLine();
 
                             Cashier potentialCashier = new Cashier(storeNumber, cashierNumber, firstName, lastName);
 
                             ps = connection.prepareStatement(potentialCashier.getInsertIntoDatabaseStatement() );
+                            ps.execute();
+
+                            /*
+                             * NEED TO FIX THIS... FIX ADD CASHIER SQL FUNCTION FIRST...
+                             */
+                            //creates the user
+                            String createUser = "CREATE USER " + "'" + cashierNumber + "'";
+                            ps = connection.prepareStatement(createUser);
+                            ps.execute();
+                            //grants cashier role to new user
+                            String grantRole = "GRANT cashier TO " + "'" + cashierNumber + "'";
+                            ps = connection.prepareStatement(grantRole);
+                            ps.execute();
+                            String passwordQuery = "SET PASSWORD FOR" + "'" + cashierNumber + "'" + "=" +
+                                    "'" + cashierPassword + "'";
+                            ps = connection.prepareStatement(passwordQuery);
                             ps.execute();
                         } catch (SQLException f) {
                             System.out.println(f.getMessage());
