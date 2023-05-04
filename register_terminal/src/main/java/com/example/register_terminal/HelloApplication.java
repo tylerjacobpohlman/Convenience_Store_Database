@@ -24,8 +24,6 @@ public class HelloApplication extends Application {
     //shouldn't use root, will change to proper credentials once created
     String username;
     String password;
-    //will change to proper login with each cashier having an individual user account
-    String cashierNum;
     String registerNum;
     Connection connection;
     PreparedStatement ps;
@@ -61,7 +59,7 @@ public class HelloApplication extends Application {
         AnchorPane.setTopAnchor(usernameLabel, 100.0);
 
         //TextField usernameTextField = new TextField();
-        TextField usernameTextField = new TextField("root");
+        TextField usernameTextField = new TextField("718111");
 
         AnchorPane.setLeftAnchor(usernameTextField, 40.0);
         AnchorPane.setTopAnchor(usernameTextField, 120.0);
@@ -70,7 +68,7 @@ public class HelloApplication extends Application {
         AnchorPane.setTopAnchor(passwordLabel, 160.0);
 
         //TextField passwordTextField = new TextField();
-        TextField passwordTextField = new TextField("187421");
+        TextField passwordTextField = new TextField("718111");
 
         AnchorPane.setLeftAnchor(passwordTextField, 40.0);
         AnchorPane.setTopAnchor(passwordTextField, 180.0);
@@ -83,15 +81,6 @@ public class HelloApplication extends Application {
 
         AnchorPane.setLeftAnchor(registerNumTextField, 40.0);
         AnchorPane.setTopAnchor(registerNumTextField, 240.0);
-        Label employeeNumLabel = new Label("Employee ID:");
-        AnchorPane.setLeftAnchor(employeeNumLabel, 40.0);
-        AnchorPane.setTopAnchor(employeeNumLabel, 280.0);
-
-        //TextField employeeNumTextField = new TextField();
-        TextField employeeNumTextField = new TextField("324");
-
-        AnchorPane.setLeftAnchor(employeeNumTextField, 40.0);
-        AnchorPane.setTopAnchor(employeeNumTextField, 300.0);
         Button introductionEnterButton = new Button("ENTER");
         AnchorPane.setLeftAnchor(introductionEnterButton, 40.0);
         AnchorPane.setTopAnchor(introductionEnterButton, 340.0);
@@ -99,8 +88,8 @@ public class HelloApplication extends Application {
         AnchorPane.setRightAnchor(introductionErrorLabel, 150.0);
         AnchorPane.setBottomAnchor(introductionErrorLabel, 60.0);
         introductionPane.getChildren().addAll(introductionLabel, introductionSubLabel, usernameLabel, usernameTextField,
-                passwordLabel, passwordTextField, registerNumLabel, registerNumTextField, employeeNumLabel,
-                employeeNumTextField, introductionEnterButton, introductionErrorLabel);
+                passwordLabel, passwordTextField, registerNumLabel, registerNumTextField, introductionEnterButton,
+                introductionErrorLabel);
 
         /*
          * ITEMS USED FOR MAIN SCENE
@@ -182,11 +171,10 @@ public class HelloApplication extends Application {
 
                 username = usernameTextField.getText();
                 password = passwordTextField.getText();
-                cashierNum = employeeNumTextField.getText();
                 registerNum = registerNumTextField.getText();
 
                 //when one or more of the text fields have no text
-                if(username.equals("") || password.equals("") || cashierNum.equals("") || registerNum.equals("")) {
+                if(username.equals("") || password.equals("") || registerNum.equals("")) {
                     introductionErrorLabel.setText("Error: One or more of the text fields are empty!");
                 }
                 else {
@@ -194,7 +182,7 @@ public class HelloApplication extends Application {
                     connection = DriverManager.getConnection(dbUrl, username, password);
 
                     //ties the login procedure from the database
-                    String login = "CALL cashierRegisterLogin('" + cashierNum + "', '" + registerNum + "')";
+                    String login = "CALL cashierRegisterLogin('" + username + "', '" + registerNum + "')";
                     ps = connection.prepareStatement(login);
                     ps.execute();
 
