@@ -341,6 +341,21 @@ public class HelloApplication extends Application {
             memberIDTextField.setText("");
         });
 
+        /*
+         * CLOSE PROGRAM ACTION
+         */
+        stage.setOnCloseRequest(event -> {
+            //calls the logoff procedure from the database
+            String logoff = "CALL cashierRegisterLogoff('" + registerNum + "')";
+            try {
+                ps = connection.prepareStatement(logoff);
+                rs = ps.executeQuery();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+        });
+
 
 
         stage.setTitle("Hello!");

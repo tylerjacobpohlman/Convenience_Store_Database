@@ -498,6 +498,23 @@ BEGIN
     WHERE register_id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
 END //
 DELIMITER ;
+-- cashierRegisterLogoff
+DELIMITER //
+CREATE PROCEDURE cashierRegisterLogoff(
+    given_register_number VARCHAR(16)
+)
+BEGIN
+    -- creates exception for invalid register_id and/or cashier_id
+    DECLARE no_such_register CONDITION FOR SQLSTATE '45000';
+    IF given_register_number NOT IN (SELECT register_number FROM registers) THEN
+        SIGNAL no_such_register SET MESSAGE_TEXT = 'No such register_id exists';
+    END IF;
+
+    UPDATE cashier_assignments
+    SET cashier_id = null
+    WHERE register_id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
+END //
+DELIMITER ;
 -- storeAddressLookupFromRegister
 DELIMITER //
 CREATE PROCEDURE storeAddressLookupFromRegister(
@@ -577,6 +594,7 @@ CREATE ROLE cashier;
 GRANT SELECT, INSERT ON hvs.* TO cashier;
 -- given the procedures used in the cashier terminal application
 GRANT EXECUTE ON PROCEDURE hvs.cashierRegisterLogin TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.cashierRegisterLogoff TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.storeAddressLookupFromRegister TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.storeAddressLookupFromRegister TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.itemUPCLookup TO cashier;
