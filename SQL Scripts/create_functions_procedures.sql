@@ -136,9 +136,16 @@ CREATE PROCEDURE addCashier(
     given_cashier_number CHAR(6),
     given_first_name VARCHAR(32),
     given_last_name VARCHAR(32),
-    given_
+    given_password VARCHAR(32)
 )
 BEGIN
+    -- creates a new user with the username as cashier id and password provided
+    -- CREATE USER given_cashier_number
+    -- IDENTIFIED WITH given_password;
+
+    -- grants the user the cashier role
+    -- GRANT cashier TO given_cashier_number;
+
     INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name)
     VALUES 
     (

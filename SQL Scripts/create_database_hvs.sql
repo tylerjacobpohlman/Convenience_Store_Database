@@ -49,6 +49,7 @@ CREATE TABLE cashiers
     -- cashiers might share the same name, so no need for UNIQUE
     cashier_first_name VARCHAR(32),
     cashier_last_name VARCHAR(32),
+    cashier_password VARCHAR(32),
     CONSTRAINT cashiers_fk_stores FOREIGN KEY (store_id) REFERENCES stores (store_id)
 );
 
@@ -76,7 +77,7 @@ CREATE TABLE registers
 CREATE TABLE cashier_assignments
 (
     -- automatically NOT NULL and UNIQUE
-    -- setup in such a way that there can be one register assigned
+    -- setup in such a way that there can be used at a time
 	register_id INT PRIMARY KEY,
     -- setup in such a way that a cashier can be assigned to multiple registers
     -- Also, NULL value means the register is unassigned
@@ -273,28 +274,6 @@ BEGIN
 END //
 DELIMITER ;
 
--- ***************
--- CREATE TRIGGERS
--- ***************
-DELIMITER //
-CREATE TRIGGER cashier_assignments_after_update
-    BEFORE UPDATE ON cashier_assignments
-    FOR EACH ROW
-BEGIN
-    -- only limitation is that, if the register has a NULL cashier_id, then there will be a sign out
-    -- for a NULL cashier
-    INSERT INTO cashier_assignments_audit
-    VALUES (OLD.register_id, OLD.cashier_id, 'Sign out', NOW() );
-
-    INSERT INTO cashier_assignments_audit
-    VALUES (NEW.register_id, NEW.cashier_id, 'Sign in', NOW() );
-
-    -- fixes edge case, removing rows where a NULL employee logins
-    DELETE FROM cashier_assignments_audit
-    WHERE cashier_id IS NULL;
-END //
-DELIMITER ;
-
 -- *******************************************************************************************
 -- The following have simple insert statements since they lack concrete foreign key restraints
 -- *******************************************************************************************
@@ -302,24 +281,30 @@ INSERT INTO states
 VALUES
 ('OH', 0.08),
 ('KY', 0.04),
-('NY', 0.10)
+('NY', 0.10),
+('AK', 0.02),
+('PA', 0.07)
 ;
 INSERT INTO stores (store_number, store_address, store_city, store_state, store_zip, store_phone)
 VALUES 
 ('3329', '11706 Clifton Boulevard 117th & Clifton', 'Lakewood', 'OH', '44107', '(216) 228-9296'),
 ('3301', '28100 Chagrin Blvd', 'Woodmere', 'OH', '44122', '(216) 831-1466'),
-('5759', '3950 Turkeyfoot Rd', 'Erlanger', 'KY', '41018', '(859) 647-6211')
+('5759', '3950 Turkeyfoot Rd', 'Erlanger', 'KY', '41018', '(859) 647-6211'),
+('2558', '360 6th Avenue', 'New York City', 'NY', '10011', '(212) 375-9401'),
+('3999', '401 Chestnut St.', 'Carnegie', 'PA', '15106', '(412) 279-5020')
 ;
-INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name)
+INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name, cashier_password)
 VALUES
+-- for sake of simplicity, the employee number is their password
 -- each store has a unique self help cashier for self checkout
-(1, '98', 'SELF', 'HELP'),
-(2, '93', 'SELF', 'HELP'),
-(3, '46', 'SELF', 'HELP'),
-(1, '462', 'Sally', 'Sue'),
-(3, '873', 'Dwanye', 'The Rock'),
-(2, '221', 'Liam', 'Wasserman'),
-(2, '324', 'Jace', 'Margs')
+(1, '718111', 'SELF', 'HELP', '718111'),
+(2, '72575', 'SELF', 'HELP', '72575'),
+(3, '648172', 'SELF', 'HELP', '648172'),
+(1, '540367', 'Sally', 'Sue', '540367'),
+(3, '535113', 'Dwanye', 'The Rock', '535113'),
+(2, '394137', 'Liam', 'Wasserman', '394137'),
+(2, '716281', 'Jace', 'Margs', '716281'),
+(4, '347242', 'Josh', 'Margulies', '347242')
 ;
 INSERT INTO registers (store_id, register_number, register_type)
 VALUES
@@ -329,7 +314,8 @@ VALUES
 (3, '448', 'Clerk'),
 (1, '580', 'Clerk'),
 (2, '3452', 'Clerk'),
-(3, '1234', 'Clerk')
+(3, '1234', 'Clerk'),
+(5, '3344', 'Clerk')
 ;
 INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage)
 VALUES 
@@ -350,15 +336,21 @@ VALUES
 
 INSERT INTO members (member_account_number, member_first_name, member_last_name, member_phone_number, member_email_address)
 VALUES
-('456365', 'Tyler', 'Pohlman', '2169700354', 'tylerjacobpohlman@gmail.com'),
-('98567843567', 'Spencer', 'Kornspan', '4406427483', 'spencervenom@gmail.com'),
-('74268343', 'Phillip', 'McCourt', '3125537890', 'prmc64@icloud.com')
+('6142965', 'Tyler', 'Pohlman', '2169700354', 'tylerpp@gmail.com'),
+('29166057', 'Spencer', 'Kornspan', '4406427483', 'spencervenom@gmail.com'),
+('24389822', 'Phillip', 'McCourt', '3125537890', 'prmc64@icloud.com'),
+('28305188', 'Duane', 'Pohlman', '2163435478', 'duanedd@gmail.com'),
+('49403382', 'John', 'Smith', '9312333387', 'smithingsmith@smith.com')
 ;
+-- insert statements doesn't make sense here since it implied that the specified employee is already
+-- logged into the specified register...
 INSERT INTO cashier_assignments (register_id, cashier_id)
 VALUES 
 (1, 1),
 (2, 1),
-(4, 5)
+(4, 5),
+(3, 3),
+(5, 5)
 ;
 
 -- *************************
@@ -366,26 +358,31 @@ VALUES
 -- *************************
 INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
 VALUES
-(1, 1, '67544567','2023-01-01 22:10:26', receiptsCashierName(1) ),
-(4, NULL, '444237778','2023-04-08 13:05:00', receiptsCashierName(4) ),
-(2, 3, '444238578', NOW(), receiptsCashierName(2) );
+(1, 1, '49654864','2023-01-01 22:10:26', receiptsCashierName(1) ),
+(4, NULL, '23930097','2023-04-08 13:05:00', receiptsCashierName(4) ),
+(2, 3, '52286396', NOW(), receiptsCashierName(2) ),
+(1, 1, '68883706', '2023-05-01 12:06:53', receiptsCashierName(1) ),
+(3, NULL, '44351438', '2023-05-04 10:53', receiptsCashierName(3));
 
 INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
 VALUES
 (1, 2, detailsDiscount(1, 2), detailsPrice(1, 2), 2),
 (1, 1, detailsDiscount(1, 1), detailsPrice(1, 1), 5),
 (2, 3, detailsDiscount(2, 3), detailsPrice(2, 3), 4),
-(3, 1, detailsDiscount(3, 1), detailsPrice(3, 1), 10)
+(3, 1, detailsDiscount(3, 1), detailsPrice(3, 1), 10),
+(4, 4, detailsDiscount(4, 4), detailsPrice(4, 4), 1),
+(5, 4, detailsDiscount(5, 4), detailsPrice(5, 4), 2)
 ;
 
 -- could have done in the insert statement, but it would have gotten too long
 UPDATE receipt_details
 SET item_total = item_quantity * item_price;
 
--- How does this work? I have no clue because I copied it from someone on StackOverflow.
+-- How does this work? I have no clue because I copied it from someone on StackOverflow...
 -- The purpose of this update is to set the receipt_subtotal equal to all the receipt_details item_totals
 UPDATE receipts 
-SET receipt_subtotal = (SELECT SUM(item_total) FROM receipt_details WHERE receipts.receipt_id = receipt_details.receipt_id)
+SET receipt_subtotal 
+    = (SELECT SUM(item_total) FROM receipt_details WHERE receipts.receipt_id = receipt_details.receipt_id)
 ;
 
 -- sets the total equal to the the subtotal plus state tax
@@ -550,6 +547,25 @@ BEGIN
     WHERE member_phone_number = given_phone_number;
 END //
 DELIMITER ;
+-- memberAccountNumberLookup
+DELIMITER //
+CREATE PROCEDURE memberAccountNumberLookup(
+    given_account_number VARCHAR(20)
+)
+BEGIN
+    -- creates exception member no matching member is found
+    DECLARE no_such_account_num CONDITION FOR SQLSTATE '45000';
+
+    IF given_account_number NOT IN (SELECT member_account_number FROM members)
+    THEN
+        SIGNAL no_such_account_num SET MESSAGE_TEXT = 'No such account_number exists';
+    END IF;
+
+    SELECT member_first_name, member_last_name
+    FROM members
+    WHERE member_account_number = given_account_number;
+END //
+DELIMITER ;  
 
 -- *****
 -- ROLES
@@ -567,7 +583,7 @@ GRANT EXECUTE ON PROCEDURE memberAccountNumberLookup TO cashier;
 -- TRIGGERS
 -- ********
 -- cashier_assignments_after_update
-DROP TRIGGER IF EXISTS cashiers_assignments_after_update;
+DROP TRIGGER IF EXISTS cashier_assignments_after_update;
 DELIMITER //
 CREATE TRIGGER cashier_assignments_after_update
     BEFORE UPDATE ON cashier_assignments
