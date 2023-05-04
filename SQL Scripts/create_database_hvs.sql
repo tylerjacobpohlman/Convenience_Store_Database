@@ -135,7 +135,7 @@ CREATE TABLE receipts
     -- foreign key, but can be null if customer isn't a member
     member_id INT,
     -- each receipt has a unique number, and it must have that number
-    receipt_number VARCHAR(16) NOT NULL UNIQUE,
+    receipt_number INT NOT NULL UNIQUE,
     -- the time and date of purchase
     receipt_date_time DATETIME DEFAULT NOW(),
     receipt_subtotal DECIMAL(9,2) DEFAULT 0.0,
@@ -358,11 +358,11 @@ VALUES
 -- *************************
 INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
 VALUES
-(1, 1, '49654864','2023-01-01 22:10:26', receiptsCashierName(1) ),
-(4, NULL, '23930097','2023-04-08 13:05:00', receiptsCashierName(4) ),
-(2, 3, '52286396', NOW(), receiptsCashierName(2) ),
-(1, 1, '68883706', '2023-05-01 12:06:53', receiptsCashierName(1) ),
-(3, NULL, '44351438', '2023-05-04 10:53', receiptsCashierName(3));
+(1, 1, 49654864,'2023-01-01 22:10:26', receiptsCashierName(1) ),
+(4, NULL, 23930097,'2023-04-08 13:05:00', receiptsCashierName(4) ),
+(2, 3, 52286396, NOW(), receiptsCashierName(2) ),
+(1, 1, 68883706, '2023-05-01 12:06:53', receiptsCashierName(1) ),
+(3, NULL, 44351438, '2023-05-04 10:53', receiptsCashierName(3));
 
 INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
 VALUES
