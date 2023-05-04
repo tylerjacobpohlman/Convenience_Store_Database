@@ -571,13 +571,61 @@ DELIMITER ;
 -- ROLES
 -- *****
 -- cashier 
-CREATE ROLE IF NOT EXISTS cashier;
+DROP ROLE IF EXISTS cashier;
+CREATE ROLE cashier;
+-- here so the role can even select the database in the first place
+GRANT SELECT, INSERT ON hvs.* TO cashier;
 -- given the procedures used in the cashier terminal application
-GRANT EXECUTE ON PROCEDURE storeAddressLookupFromRegister TO cashier;
-GRANT EXECUTE ON PROCEDURE itemUPCLookup TO cashier;
-GRANT EXECUTE ON PROCEDURE memberPhoneLookup TO cashier;
-GRANT EXECUTE ON PROCEDURE memberAccountNumberLookup TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.cashierRegisterLogin TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.storeAddressLookupFromRegister TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.storeAddressLookupFromRegister TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.itemUPCLookup TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.memberPhoneLookup TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.memberAccountNumberLookup TO cashier;
+-- *****
+-- USERS
+-- *****
+-- creates accounts for all the previously defined cashiers with a default password
+-- of their employee number
+DROP USER IF EXISTS '718111';
+CREATE USER '718111' IDENTIFIED BY '718111';
+GRANT cashier TO '718111';
+SET DEFAULT ROLE cashier to '718111';
 
+DROP USER IF EXISTS '72575';
+CREATE USER '72575' IDENTIFIED BY '72575';
+GRANT cashier TO '72575';
+SET DEFAULT ROLE cashier to '72575';
+
+DROP USER IF EXISTS '648172';
+CREATE USER '648172' IDENTIFIED BY '648172';
+GRANT cashier TO '648172';
+SET DEFAULT ROLE cashier to '648172';
+
+DROP USER IF EXISTS '540367';
+CREATE USER '540367' IDENTIFIED BY '540367';
+GRANT cashier TO '540367';
+SET DEFAULT ROLE cashier to '540367';
+
+DROP USER IF EXISTS '535113';
+CREATE USER '535113' IDENTIFIED BY '535113';
+GRANT cashier TO '535113';
+SET DEFAULT ROLE cashier to '535113';
+
+DROP USER IF EXISTS '394137';
+CREATE USER '394137' IDENTIFIED BY '394137';
+GRANT cashier TO '394137';
+SET DEFAULT ROLE cashier to '394137';
+
+DROP USER IF EXISTS '716281';
+CREATE USER '716281' IDENTIFIED BY '716281';
+GRANT cashier TO '716281';
+SET DEFAULT ROLE cashier to '716281';
+
+DROP USER IF EXISTS '347242';
+CREATE USER '347242' IDENTIFIED BY '347242';
+GRANT cashier TO '347242';
+SET DEFAULT ROLE cashier to '347242';
 
 -- ********
 -- TRIGGERS
