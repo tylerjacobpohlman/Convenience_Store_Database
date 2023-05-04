@@ -251,6 +251,10 @@ public class AdminTerminalProgram {
                                     "'" + cashierPassword + "'";
                             ps = connection.prepareStatement(passwordQuery);
                             ps.execute();
+                            //sets the default role as cashier for the new user
+                            String defaultRole = "SET DEFAULT ROLE cashier to + '" + cashierNumber + "'";
+                            ps = connection.prepareStatement(defaultRole);
+                            ps.execute();
                         } catch (SQLException f) {
                             System.out.println(f.getMessage());
 
