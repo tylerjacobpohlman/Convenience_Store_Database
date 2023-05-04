@@ -163,10 +163,7 @@ CREATE TABLE receipt_details
     item_price DECIMAL(9,2) DEFAULT 0.00,
     item_discount_percentage DECIMAL(2,2) DEFAULT 0.00,
     CONSTRAINT details_fk_receipts FOREIGN KEY (receipt_id) REFERENCES receipts(receipt_id),
-    CONSTRAINT details_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id),
-    -- this is a composite key
-    -- allowed because the two ids are always a unique combination
-    CONSTRAINT pk_receipt_details PRIMARY KEY (receipt_id, item_id)
+    CONSTRAINT details_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id)
 );
 -- CREATES RECEIPT_DETAILS_AUDIT TABLE
 CREATE TABLE cashier_assignments_audit
@@ -273,6 +270,67 @@ BEGIN
     RETURN(name);
 END //
 DELIMITER ;
+-- registerIDFromNumber
+DROP FUNCTION IF EXISTS registerIDFromNumber;
+DELIMITER //
+CREATE FUNCTION registerIDFromNumber(
+    given_register_number VARCHAR(16)
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE id INT;
+    SET id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
+
+    RETURN(id);
+END //
+DELIMITER ;
+
+DROP FUNCTION IF EXISTS memberIDFromNumber;
+DELIMITER //
+CREATE FUNCTION memberIDFromNumber(
+    given_member_number VARCHAR(20)
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE id INT;
+    SET id = (SELECT member_id FROM members WHERE member_account_number = given_member_number);
+
+    RETURN(id);
+END //
+DELIMITER ;
+-- receiptIDFromNumber
+DROP FUNCTION IF EXISTS receiptIDFromNumber;
+DELIMITER //
+CREATE FUNCTION receiptIDFromNumber(
+    given_receipt_number INT
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE id INT;
+    SET id = (SELECT receipt_id FROM receipts WHERE receipt_number = given_receipt_number);
+
+    RETURN(id);
+END //
+DELIMITER ;
+-- itemIDFromUPC
+DROP FUNCTION IF EXISTS itemIDFromUPC;
+DELIMITER //
+CREATE FUNCTION itemIDFromUPC(
+    given_upc VARCHAR(20)
+)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE id INT;
+    SET id = (SELECT item_id FROM items WHERE item_upc = given_upc);
+
+    RETURN(id);
+END //
+DELIMITER ;
+
 
 -- *******************************************************************************************
 -- The following have simple insert statements since they lack concrete foreign key restraints
@@ -588,23 +646,42 @@ DROP PROCEDURE IF EXISTS createReceipt;
 DELIMITER //
 CREATE PROCEDURE createReceipt(
     given_register_number VARCHAR(16),
-    given_member_number VARCHAR(20)
+    given_member_number VARCHAR(20),
+    given_receipt_number INT
 )
 BEGIN
     INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
     VALUES
     (
-        (SELECT register_id FROM registers WHERE register_number = given_register_number),
-        (SELECT member_id FROM members WHERE member_account_number = given_member_number),
-        -- slim chance that the random number already be in the table...
-        RAND()*1000000000,
-        -- null for now before items are added
-        null,
-        receiptsCashierName((SELECT register_id FROM registers WHERE register_number = given_register_number))
+    registerIDFromNumber(given_register_number),
+    memberIDFromNum(given_member_number),
+    given_receipt_number,
+    -- null for now before items are added
+    null,
+    receiptsCashierName((SELECT register_id FROM registers WHERE register_number = given_register_number))
 
     );
 END //
 DELIMITER;
+-- addItemToReceipt
+DROP PROCEDURE IF EXISTS addItemToReceipt;
+DELIMITER //
+CREATE PROCEDURE addItemToReceipt(
+    given_upc VARCHAR(20),
+    given_receipt_number INT
+)
+BEGIN
+    INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
+    VALUES
+    (
+    receiptIDFromNumber(given_receipt_number),
+    itemIDFromUPC(given_upc),
+    detailsDiscount(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
+    detailsPrice(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
+    1
+    );
+END //
+DELIMITER ;
 -- addItemToReceipt
 -- *****
 -- ROLES
@@ -622,6 +699,8 @@ GRANT EXECUTE ON PROCEDURE hvs.storeAddressLookupFromRegister TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.itemUPCLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.memberPhoneLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.memberAccountNumberLookup TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.createReceipt TO cashier;
+
 -- *****
 -- USERS
 -- *****
