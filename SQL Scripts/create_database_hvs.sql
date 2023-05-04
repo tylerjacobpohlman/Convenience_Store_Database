@@ -583,7 +583,29 @@ BEGIN
     WHERE member_account_number = given_account_number;
 END //
 DELIMITER ;  
+-- createReceipt
+DROP PROCEDURE IF EXISTS createReceipt;
+DELIMITER //
+CREATE PROCEDURE createReceipt(
+    given_register_number VARCHAR(16),
+    given_member_number VARCHAR(20)
+)
+BEGIN
+    INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
+    VALUES
+    (
+        (SELECT register_id FROM registers WHERE register_number = given_register_number),
+        (SELECT member_id FROM members WHERE member_account_number = given_member_number),
+        -- slim chance that the random number already be in the table...
+        RAND()*1000000000,
+        -- null for now before items are added
+        null,
+        receiptsCashierName((SELECT register_id FROM registers WHERE register_number = given_register_number))
 
+    );
+END //
+DELIMITER;
+-- addItemToReceipt
 -- *****
 -- ROLES
 -- *****
