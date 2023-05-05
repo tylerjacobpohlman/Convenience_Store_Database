@@ -654,7 +654,7 @@ BEGIN
     VALUES
     (
     registerIDFromNumber(given_register_number),
-    memberIDFromNum(given_member_number),
+    memberIDFromNumber(given_member_number),
     given_receipt_number,
     -- null for now before items are added
     null,
@@ -682,7 +682,43 @@ BEGIN
     );
 END //
 DELIMITER ;
--- addItemToReceipt
+-- finalizeReceipt
+DROP PROCEDURE IF EXISTS finalizeReceipt;
+DELIMITER //
+CREATE PROCEDURE finalizeReceipt(
+    given_receipt_number INT,
+    given_cash DECIMAL(9,2)
+)
+BEGIN
+    -- save time by only changing rows that correspond to the given receipt
+    UPDATE receipt_details
+    SET item_total = item_quantity * item_price
+    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+
+    UPDATE receipts
+    SET receipt_subtotal 
+    = (SELECT SUM(item_total) FROM receipt_details WHERE receipt_id = receiptIDFromNumber(given_receipt_number))
+    -- avoid wasting time and only change the receipt_detail that correspond to the receipt
+    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+
+    UPDATE receipts
+    SET receipt_total = receipt_subtotal * (1 + receiptsStateTax(receiptIDFromNumber(given_receipt_number)))
+    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+
+    UPDATE receipts
+    SET receipt_date_time = NOW()
+    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+
+    UPDATE receipts
+    SET receipt_charge = given_cash
+    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+
+    UPDATE receipts
+    SET receipt_change_due = receipt_charge - receipt_total
+    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+END //
+DELIMITER ;
+
 -- *****
 -- ROLES
 -- *****
