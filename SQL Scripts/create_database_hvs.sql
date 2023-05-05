@@ -748,6 +748,7 @@ GRANT EXECUTE ON PROCEDURE hvs.memberAccountNumberLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.createReceipt TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.addItemToReceipt TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.finalizeReceipt TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.getStateTax TO cashier;
 
 -- *****
 -- USERS
