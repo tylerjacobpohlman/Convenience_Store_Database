@@ -700,6 +700,7 @@ GRANT EXECUTE ON PROCEDURE hvs.itemUPCLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.memberPhoneLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.memberAccountNumberLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.createReceipt TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.addItemToReceipt TO cashier;
 
 -- *****
 -- USERS
