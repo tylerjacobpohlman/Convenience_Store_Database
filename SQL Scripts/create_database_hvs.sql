@@ -718,6 +718,16 @@ BEGIN
     WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
 END //
 DELIMITER ;
+-- getStateTax
+DROP PROCEDURE IF EXISTS getStateTax;
+DELIMITER //
+CREATE PROCEDURE getStateTax(
+    given_receipt_number INT
+)
+BEGIN
+    SELECT receiptsStateTax(receiptIDFromNumber(given_receipt_number));
+END //
+DELIMITER ;
 
 -- *****
 -- ROLES
@@ -737,6 +747,7 @@ GRANT EXECUTE ON PROCEDURE hvs.memberPhoneLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.memberAccountNumberLookup TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.createReceipt TO cashier;
 GRANT EXECUTE ON PROCEDURE hvs.addItemToReceipt TO cashier;
+GRANT EXECUTE ON PROCEDURE hvs.finalizeReceipt TO cashier;
 
 -- *****
 -- USERS

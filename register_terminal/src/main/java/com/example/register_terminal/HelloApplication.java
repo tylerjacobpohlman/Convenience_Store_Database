@@ -2,7 +2,7 @@ package com.example.register_terminal;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXMLLoader;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -26,15 +26,21 @@ public class HelloApplication extends Application {
     String username;
     String password;
     String registerNum;
-    Connection connection;
+    Connection connection = null;
     PreparedStatement ps;
     ResultSet rs;
     //stored as null by default to indicate no membership is provided
     Member givenMember = null;
 
+    int receiptNumber;
+
+    //stores the total of all the items
+    double amountDue = 0.0;
+    double stateTax;
+
     @Override
     public void start(Stage stage) throws IOException {
-        //INTRODUCTION SCENE
+        //INTRODUCTION PANE
         AnchorPane introductionPane = new AnchorPane();
         Scene introductionScene = new Scene(introductionPane, 800, 600);
 
@@ -45,6 +51,10 @@ public class HelloApplication extends Application {
         //MEMBER ID PANE
         AnchorPane memberIDPane = new AnchorPane();
         Scene memberIDScene = new Scene(memberIDPane, 800, 600);
+
+        //PAYMENT PANE
+        AnchorPane paymentPane = new AnchorPane();
+        Scene paymentScene = new Scene(paymentPane, 800, 600);
 
         /*
          * ITEMS USED FOR INTRODUCTION SCENE
@@ -161,6 +171,33 @@ public class HelloApplication extends Application {
                 memberIDTextField, memberIDEnterButton, memberIDGoBackButton, memberIDErrorLabel);
 
         /*
+         * ITEMS USED FOR PAYMENT SCENE
+         */
+        Label amountDueLabel = new Label();
+        AnchorPane.setLeftAnchor(amountDueLabel, 40.0);
+        AnchorPane.setTopAnchor(amountDueLabel, 20.0);
+        Label amountPaidLabel = new Label("Amount Paid:");
+        AnchorPane.setLeftAnchor(amountPaidLabel, 40.0);
+        AnchorPane.setTopAnchor(amountPaidLabel, 100.0);
+        TextField amountPaidTextField = new TextField();
+        AnchorPane.setLeftAnchor(amountPaidTextField, 40.0);
+        AnchorPane.setTopAnchor(amountPaidTextField, 120.0);
+        Label changeDueLabel = new Label("Change Due: ...");
+        AnchorPane.setLeftAnchor(changeDueLabel, 40.0);
+        AnchorPane.setTopAnchor(changeDueLabel, 160.0);
+        Button paymentFinishButton = new Button("FINISH");
+        AnchorPane.setLeftAnchor(paymentFinishButton, 40.0);
+        AnchorPane.setTopAnchor(paymentFinishButton, 340.0);
+        Button startNewReceiptButton = new Button("Start New Transaction");
+        AnchorPane.setLeftAnchor(startNewReceiptButton, 40.0);
+        AnchorPane.setTopAnchor(startNewReceiptButton, 380.0);
+        Label paymentErrorLabel = new Label("");
+        AnchorPane.setRightAnchor(paymentErrorLabel, 40.0);
+        AnchorPane.setBottomAnchor(paymentErrorLabel, 60.0);
+        paymentPane.getChildren().addAll(amountDueLabel, amountPaidLabel, amountPaidTextField, changeDueLabel,
+                paymentFinishButton, startNewReceiptButton, paymentErrorLabel);
+
+        /*
          * INTRODUCTION SCENE
          */
         stage.setScene(introductionScene);
@@ -258,16 +295,23 @@ public class HelloApplication extends Application {
             }
         });
         memeberLookupButton.setOnAction(ActionEvent -> {
-            stage.setScene(memberIDScene);
+            //stop the changing of members
+            //checks if there's no member
+            if(givenMember == null) {
+                stage.setScene(memberIDScene);
+            } else {
+                mainMenuErrorLabel.setText("Membership already inputted...");
+            }
         });
 
         /*
          * FINISH AND PAY BUTTON CLICK
          */
         finishAndPayButton.setOnAction(ActionEvent -> {
+
             //creates a new random receipt number
             Random rand = new Random();
-            int receiptNumber = rand.nextInt(1000000000);
+            receiptNumber = rand.nextInt(1000000000);
 
             try {
                 String createReceipt;
@@ -298,11 +342,52 @@ public class HelloApplication extends Application {
                     ps = connection.prepareStatement(addItem);
                     ps.execute();
                 }
-            //highly unlikely that, considering everything else worked, this wouldn't...
+            //highly unlikely that, considering everything else worked, this would too...
             //so this is here for debugging purposes
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+
+
+            for(int i = 0; i < addedItems.getItems().size(); i++) {
+
+                double itemAmount = addedItems.getItems().get(i).getPrice();
+
+                double discount = 0.0;
+                //only grabs the discount if there's a given member
+                if (givenMember != null ) {
+                    discount = addedItems.getItems().get(i).getDiscount();
+                }
+
+                double discountedItem = itemAmount * (1 - discount);
+
+                //adds that item price to the grand total
+                amountDue += discountedItem;
+            }
+
+            try {
+                String getStateTax = "CALL getStateTax(" + receiptNumber + ")";
+
+                ps = connection.prepareStatement(getStateTax);
+                //stores the address in the result set
+                rs = ps.executeQuery();
+                while(rs.next() ) {
+                    stateTax = Double.parseDouble(rs.getString(1));
+                }
+
+                //sets the amount due including state tax
+                amountDue = amountDue * (1 + stateTax);
+
+                //considering all goes well, goes on to the final scene to get the amount paid and amount due
+                stage.setScene(paymentScene);
+
+                //highly unlikely that, considering everything else worked, this would too...
+                //so this is here for debugging purposes
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+            amountDueLabel.setText("Amount Due: " + String.format("%.2f", amountDue));
 
 
         });
@@ -389,23 +474,54 @@ public class HelloApplication extends Application {
         });
 
         /*
+         * PAYMENT SCENE
+         */
+        paymentFinishButton.setOnAction(ActionEvent -> {
+
+            try {
+                //resets the error label
+                paymentErrorLabel.setText("");
+
+                double amountPaid = Double.parseDouble(amountPaidTextField.getText());
+
+                String finalizeReceipt = "CALL finalizeReceipt(" + receiptNumber + " ," + amountPaid + ")";
+
+                ps = connection.prepareStatement(finalizeReceipt);
+                ps.execute();
+
+                changeDueLabel.setText("Change Due: " + String.format("%.2f", amountPaid - amountDue));
+            }
+            //invalid input where the amount paid isn't a numeric value
+            catch (NumberFormatException e) {
+                paymentErrorLabel.setText("Invalid input! Enter numeric values only...");
+            }
+            //highly unlikely this will fail considering everything else succeeded up to this point
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        /*
          * CLOSE PROGRAM ACTION
          */
         stage.setOnCloseRequest(event -> {
-            //calls the logoff procedure from the database
-            String logoff = "CALL cashierRegisterLogoff('" + registerNum + "')";
-            try {
-                ps = connection.prepareStatement(logoff);
-                rs = ps.executeQuery();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+            //fixes case where program is closed at introduction scene
+            if(connection != null) {
+                //calls the logoff procedure from the database
+                String logoff = "CALL cashierRegisterLogoff('" + registerNum + "')";
+                try {
+                    ps = connection.prepareStatement(logoff);
+                    rs = ps.executeQuery();
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
         });
 
 
 
-        stage.setTitle("Hello!");
+        stage.setTitle("Register");
         stage.show();
     }
 
