@@ -32,11 +32,11 @@ public class HelloApplication extends Application {
     //stored as null by default to indicate no membership is provided
     Member givenMember = null;
 
-    int receiptNumber;
+    Integer receiptNumber;
 
     //stores the total of all the items
-    double amountDue = 0.0;
-    double stateTax;
+    Double amountDue = 0.0;
+    Double stateTax;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -182,7 +182,7 @@ public class HelloApplication extends Application {
         TextField amountPaidTextField = new TextField();
         AnchorPane.setLeftAnchor(amountPaidTextField, 40.0);
         AnchorPane.setTopAnchor(amountPaidTextField, 120.0);
-        Label changeDueLabel = new Label("Change Due: ...");
+        Label changeDueLabel = new Label();
         AnchorPane.setLeftAnchor(changeDueLabel, 40.0);
         AnchorPane.setTopAnchor(changeDueLabel, 160.0);
         Button paymentFinishButton = new Button("FINISH");
@@ -499,6 +499,25 @@ public class HelloApplication extends Application {
             catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+        });
+        startNewReceiptButton.setOnAction(ActionEvent -> {
+            //resets the payment scene
+            amountPaidTextField.setText("");
+            changeDueLabel.setText("");
+            //resets main scene
+            mainMenuMemberStatus.setText("");
+            //removes the member
+            givenMember = null;
+            //empties the list
+            addedItems.getItems().clear();
+            //gets rid of the receipt number
+            receiptNumber = null;
+            //resets the amount due
+            amountDue = 0.0;
+            //resets state tax
+            stateTax = null;
+            //goes back to the main scene
+            stage.setScene(mainScene);
         });
 
         /*
