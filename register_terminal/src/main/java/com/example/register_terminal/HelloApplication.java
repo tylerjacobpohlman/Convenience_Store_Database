@@ -265,11 +265,13 @@ public class HelloApplication extends Application {
          * FINISH AND PAY BUTTON CLICK
          */
         finishAndPayButton.setOnAction(ActionEvent -> {
+            //creates a new random receipt number
+            Random rand = new Random();
+            int receiptNumber = rand.nextInt(1000000000);
+
             try {
                 String createReceipt;
-                //creates a new random receipt number
-                Random rand = new Random();
-                int receiptNumber = rand.nextInt(1000000000);
+
                 //if there is no provided membership
                 if (givenMember == null) {
 
@@ -289,8 +291,18 @@ public class HelloApplication extends Application {
             }
 
             try {
-
-            } catch
+                //adds all the items to the receipt_details table
+                for(int i = 0; i < addedItems.getItems().size(); i++) {
+                    String addItem = "CALL addItemToReceipt('" + addedItems.getItems().get(i).getUpc() + "', "
+                            + receiptNumber + ")";
+                    ps = connection.prepareStatement(addItem);
+                    ps.execute();
+                }
+            //highly unlikely that, considering everything else worked, this wouldn't...
+            //so this is here for debugging purposes
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
 
 
         });
