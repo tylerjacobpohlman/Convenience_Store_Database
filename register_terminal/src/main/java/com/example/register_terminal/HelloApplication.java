@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.Random;
 
 public class HelloApplication extends Application {
     //Lambda expression shenanigans forced me to put the objects used for SQL outside the start method
@@ -258,6 +259,40 @@ public class HelloApplication extends Application {
         });
         memeberLookupButton.setOnAction(ActionEvent -> {
             stage.setScene(memberIDScene);
+        });
+
+        /*
+         * FINISH AND PAY BUTTON CLICK
+         */
+        finishAndPayButton.setOnAction(ActionEvent -> {
+            try {
+                String createReceipt;
+                //creates a new random receipt number
+                Random rand = new Random();
+                int receiptNumber = rand.nextInt(1000000000);
+                //if there is no provided membership
+                if (givenMember == null) {
+
+                    createReceipt = "CALL createReceipt('" + registerNum + "', null, " + receiptNumber + ")";
+                }
+                //a membership was provided
+                else {
+                    createReceipt = "CALL createReceipt('" + registerNum + "', '" + givenMember.getAccountNumber() + "', " +
+                            receiptNumber + ")";
+                }
+                ps = connection.prepareStatement(createReceipt);
+                ps.execute();
+            //there's a chance that the receipt number may already be contained in the database,
+            //so clicking the button again should create a new random receipt number
+            } catch (SQLException e) {
+                introductionErrorLabel.setText("Please try again...");
+            }
+
+            try {
+
+            } catch
+
+
         });
 
         /*
