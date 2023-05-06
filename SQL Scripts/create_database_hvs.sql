@@ -135,7 +135,7 @@ CREATE TABLE receipts
     -- foreign key, but can be null if customer isn't a member
     member_id INT,
     -- each receipt has a unique number, and it must have that number
-    receipt_number INT NOT NULL UNIQUE AUTO INCREMENT,
+    receipt_number INT NOT NULL UNIQUE,
     -- the time and date of purchase
     receipt_date_time DATETIME DEFAULT NOW(),
     receipt_subtotal DECIMAL(9,2) DEFAULT 0.0,
@@ -401,6 +401,18 @@ VALUES
 ('49403382', 'John', 'Smith', '9312333387', 'smithingsmith@smith.com')
 ;
 
+-- Realistically, these inserts shouldn't be here b/c it implies that the given cashiers are signed into the given
+-- registers... However, do to how to the following insert statements are structured, they are needed to grab the
+-- cashier's name for a receipt.
+INSERT INTO cashier_assignments (register_id, cashier_id)
+VALUES 
+(1, 1),
+(2, 1),
+(4, 5),
+(3, 3),
+(5, 5)
+;
+
 -- *************************
 -- COMPLEX INSERT STATEMENTS
 -- *************************
@@ -451,24 +463,6 @@ SET receipt_change_due = receipt_charge - receipt_total
 -- **************************************************
 -- FUNCTIONS/PROCEDURES SPECIFIC TO JAVA APPLICATIONS
 -- **************************************************
-DROP PROCEDURE IF EXISTS addItemToReceipt;
-DELIMITER //
-CREATE PROCEDURE addItemToReceipt(
-    given_upc VARCHAR(20),
-    given_receipt_number INT
-)
-BEGIN
-    INSERT INTO receipt_details (receipt_id, item_id, item_total, item_discount_percentage, item_price, item_quantity)
-    VALUES
-    (
-    receiptIDFromNumber(given_receipt_number),
-    itemIDFromUPC(given_upc),
-    null,
-    detailsDiscount(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
-    detailsPrice(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
-    1
-    );
-END //
 -- addStore
 DELIMITER //
 CREATE PROCEDURE addStore(
@@ -644,16 +638,26 @@ CREATE PROCEDURE createReceipt(
     given_member_number VARCHAR(20)
 )
 BEGIN
-    INSERT INTO receipts (register_id, member_id, receipt_date_time, receipt_cashier_full_name)
+    DECLARE created_receipt_number INT;
+    -- grabs the greatest receipt number and adds 1 to it
+    SET created_receipt_number = (SELECT MAX(receipt_number) FROM receipts) + 1;
+
+
+    INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
     VALUES
     (
     registerIDFromNumber(given_register_number),
     memberIDFromNumber(given_member_number),
+    created_receipt_number,
     -- null for now before items are added
     null,
     receiptsCashierName((SELECT register_id FROM registers WHERE register_number = given_register_number))
 
     );
+
+    -- the newest receipt is the greatest receipt, so it is returned by this procedure
+    -- in order to be stored in the java application
+    SELECT MAX(receipt_number) FROM receipts;
 END //
 DELIMITER;
 -- addItemToReceipt
@@ -664,17 +668,17 @@ CREATE PROCEDURE addItemToReceipt(
     given_receipt_number INT
 )
 BEGIN
-    INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
+    INSERT INTO receipt_details (receipt_id, item_id, item_total, item_discount_percentage, item_price, item_quantity)
     VALUES
     (
     receiptIDFromNumber(given_receipt_number),
     itemIDFromUPC(given_upc),
+    null,
     detailsDiscount(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
     detailsPrice(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
     1
     );
 END //
-DELIMITER ;
 -- finalizeReceipt
 DROP PROCEDURE IF EXISTS finalizeReceipt;
 DELIMITER //
@@ -840,7 +844,6 @@ CREATE TRIGGER after_insert_receipt_details
 	BEFORE INSERT ON receipt_details
     FOR EACH ROW
 BEGIN
-	    -- save time by only changing rows that correspond to the given receipt
     SET NEW.item_total = NEW.item_quantity * NEW.item_price;
 END //
 DELIMITER ;

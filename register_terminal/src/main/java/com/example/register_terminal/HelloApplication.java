@@ -308,28 +308,25 @@ public class HelloApplication extends Application {
          * FINISH AND PAY BUTTON CLICK
          */
         finishAndPayButton.setOnAction(ActionEvent -> {
-
-            //creates a new random receipt number
-            Random rand = new Random();
-            receiptNumber = rand.nextInt(1000000000);
-
             try {
                 String createReceipt;
 
                 //if there is no provided membership
                 if (givenMember == null) {
 
-                    createReceipt = "CALL createReceipt('" + registerNum + "', null, " + receiptNumber + ")";
+                    createReceipt = "CALL createReceipt('" + registerNum + "', null)";
                 }
                 //a membership was provided
                 else {
-                    createReceipt = "CALL createReceipt('" + registerNum + "', '" + givenMember.getAccountNumber() + "', " +
-                            receiptNumber + ")";
+                    createReceipt = "CALL createReceipt('" + registerNum + "', '" + givenMember.getAccountNumber() + "')";
                 }
                 ps = connection.prepareStatement(createReceipt);
-                ps.execute();
-            //there's a chance that the receipt number may already be contained in the database,
-            //so clicking the button again should create a new random receipt number
+                //grabs the receipt number that was created
+                rs = ps.executeQuery();
+                while(rs.next() ) {
+                    receiptNumber = Integer.parseInt(rs.getString(1));
+                }
+            //unlikely to throw an error, so just try again if there's an issue
             } catch (SQLException e) {
                 introductionErrorLabel.setText("Please try again...");
             }
