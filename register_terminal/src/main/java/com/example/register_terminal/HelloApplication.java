@@ -481,12 +481,18 @@ public class HelloApplication extends Application {
 
                 double amountPaid = Double.parseDouble(amountPaidTextField.getText());
 
-                String finalizeReceipt = "CALL finalizeReceipt(" + receiptNumber + " ," + amountPaid + ")";
+                if(amountPaid < amountDue ) {
+                    paymentErrorLabel.setText("Amount paid must be greater or equal to amount due");
+                }
+                else {
 
-                ps = connection.prepareStatement(finalizeReceipt);
-                ps.execute();
+                    String finalizeReceipt = "CALL finalizeReceipt(" + receiptNumber + " ," + amountPaid + ")";
 
-                changeDueLabel.setText("Change Due: " + String.format("%.2f", amountPaid - amountDue));
+                    ps = connection.prepareStatement(finalizeReceipt);
+                    ps.execute();
+
+                    changeDueLabel.setText("Change Due: " + String.format("%.2f", amountPaid - amountDue));
+                }
             }
             //invalid input where the amount paid isn't a numeric value
             catch (NumberFormatException e) {
