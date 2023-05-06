@@ -135,7 +135,7 @@ CREATE TABLE receipts
     -- foreign key, but can be null if customer isn't a member
     member_id INT,
     -- each receipt has a unique number, and it must have that number
-    receipt_number INT NOT NULL UNIQUE,
+    receipt_number INT NOT NULL UNIQUE AUTO INCREMENT,
     -- the time and date of purchase
     receipt_date_time DATETIME DEFAULT NOW(),
     receipt_subtotal DECIMAL(9,2) DEFAULT 0.0,
@@ -400,16 +400,6 @@ VALUES
 ('28305188', 'Duane', 'Pohlman', '2163435478', 'duanedd@gmail.com'),
 ('49403382', 'John', 'Smith', '9312333387', 'smithingsmith@smith.com')
 ;
--- insert statements doesn't make sense here since it implied that the specified employee is already
--- logged into the specified register...
-INSERT INTO cashier_assignments (register_id, cashier_id)
-VALUES 
-(1, 1),
-(2, 1),
-(4, 5),
-(3, 3),
-(5, 5)
-;
 
 -- *************************
 -- COMPLEX INSERT STATEMENTS
@@ -461,19 +451,24 @@ SET receipt_change_due = receipt_charge - receipt_total
 -- **************************************************
 -- FUNCTIONS/PROCEDURES SPECIFIC TO JAVA APPLICATIONS
 -- **************************************************
--- addItem
+DROP PROCEDURE IF EXISTS addItemToReceipt;
 DELIMITER //
-CREATE PROCEDURE addItem(
+CREATE PROCEDURE addItemToReceipt(
     given_upc VARCHAR(20),
-    given_name VARCHAR(200),
-    given_price DECIMAL(9,2),
-    given_discount DECIMAL(2,2)
+    given_receipt_number INT
 )
-BEGIN 
-    INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage) 
-    VALUES (given_upc, given_name, given_price, given_discount);
+BEGIN
+    INSERT INTO receipt_details (receipt_id, item_id, item_total, item_discount_percentage, item_price, item_quantity)
+    VALUES
+    (
+    receiptIDFromNumber(given_receipt_number),
+    itemIDFromUPC(given_upc),
+    null,
+    detailsDiscount(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
+    detailsPrice(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
+    1
+    );
 END //
-DELIMITER ;
 -- addStore
 DELIMITER //
 CREATE PROCEDURE addStore(
@@ -646,16 +641,14 @@ DROP PROCEDURE IF EXISTS createReceipt;
 DELIMITER //
 CREATE PROCEDURE createReceipt(
     given_register_number VARCHAR(16),
-    given_member_number VARCHAR(20),
-    given_receipt_number INT
+    given_member_number VARCHAR(20)
 )
 BEGIN
-    INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
+    INSERT INTO receipts (register_id, member_id, receipt_date_time, receipt_cashier_full_name)
     VALUES
     (
     registerIDFromNumber(given_register_number),
     memberIDFromNumber(given_member_number),
-    given_receipt_number,
     -- null for now before items are added
     null,
     receiptsCashierName((SELECT register_id FROM registers WHERE register_number = given_register_number))
@@ -690,10 +683,7 @@ CREATE PROCEDURE finalizeReceipt(
     given_cash DECIMAL(9,2)
 )
 BEGIN
-    -- save time by only changing rows that correspond to the given receipt
-    UPDATE receipt_details
-    SET item_total = item_quantity * item_price
-    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+    -- spit out an error if given_cash is less than receipt_total
 
     UPDATE receipts
     SET receipt_subtotal 
@@ -843,3 +833,18 @@ BEGIN
     WHERE cashier_id IS NULL;
 END //
 DELIMITER ;
+-- after_insert_receipt_details
+DROP TRIGGER IF EXISTS after_insert_receipt_details;
+DELIMITER //
+CREATE TRIGGER after_insert_receipt_details
+	BEFORE INSERT ON receipt_details
+    FOR EACH ROW
+BEGIN
+	    -- save time by only changing rows that correspond to the given receipt
+    SET NEW.item_total = NEW.item_quantity * NEW.item_price;
+END //
+DELIMITER ;
+
+-- sales per day per product
+-- add trigger at end of day to do so
+-- blank audit table / old records
