@@ -175,6 +175,13 @@ CREATE TABLE cashier_assignments_audit
     action_type ENUM('Sign in', 'Sign out'),
     action_date DATETIME DEFAULT NOW()
 );
+-- CREATES ACCUMULATIVE_SALES_PER_PRODUCT
+CREATE TABLE accumulative_sales_per_product
+(
+    item_id INT,
+    sold_qty INT DEFAULT 0,
+    total_sales DECIMAL(10,2) DEFAULT 0.0
+);
 
 -- *****************
 -- CREATE FUNCTIONS
@@ -412,6 +419,11 @@ VALUES
 (3, 3),
 (5, 5)
 ;
+
+-- have to update each time a new product is added
+INSERT INTO accumulative_sales_per_product (item_id)
+VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14);
+
 
 -- *************************
 -- COMPLEX INSERT STATEMENTS
@@ -848,6 +860,144 @@ BEGIN
 END //
 DELIMITER ;
 
--- sales per day per product
--- add trigger at end of day to do so
--- blank audit table / old records
+-- ******
+-- EVENTS
+-- ******
+-- ensure event scheduler is enabled
+SET GLOBAL event_scheduler = ON;
+
+DROP EVENT IF EXISTS monthly_items_total;
+DELIMITER //
+CREATE EVENT monthly_items_total
+    -- every month of the 6th, the accumulative_sales_per_product
+    -- table is updated
+    ON SCHEDULE AT '2023-05-06 12:00:00' + INTERVAL 1 MONTH
+DO BEGIN
+    -- item_id 1
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 1)
+    WHERE item_id = 1;
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 1)
+    WHERE item_id = 1;
+
+    -- item_id 2
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 2)
+    WHERE item_id = 2;
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 2)
+    WHERE item_id = 2;
+
+    -- item_id 3
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 3)
+    WHERE item_id = 3;
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 3)
+    WHERE item_id = 3;
+
+    -- item_id 4
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 4)
+    WHERE item_id = 4;
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 4)
+    WHERE item_id = 4;
+
+    -- item_id 5
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 5)
+    WHERE item_id = 5;
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 5)
+    WHERE item_id = 5;
+
+    -- item_id 6
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 6)
+    WHERE item_id = 6;
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 6)
+    WHERE item_id = 6;
+
+    -- item_id 7
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 7)
+    WHERE item_id = 7;
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 7)
+    WHERE item_id = 7;
+
+    -- item_id 8
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 8)
+    WHERE item_id = 8;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 8)
+    WHERE item_id = 8;
+
+    -- item_id 9
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 9)
+    WHERE item_id = 9;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 9)
+    WHERE item_id = 9;
+
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 9)
+    WHERE item_id = 9;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 9)
+    WHERE item_id = 9;
+
+    -- item_id 10
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 10)
+    WHERE item_id = 10;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 10)
+    WHERE item_id = 10;
+
+    -- item_id 11
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 11)
+    WHERE item_id = 11;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 11)
+    WHERE item_id = 11;
+
+    -- item_id 12
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 12)
+    WHERE item_id = 12;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 12)
+    WHERE item_id = 12;
+
+    -- item_id 13
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 13)
+    WHERE item_id = 13;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 13)
+    WHERE item_id = 13;
+    
+        -- item_id 12
+    UPDATE accumulative_sales_per_product
+    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 14)
+    WHERE item_id = 14;
+    UPDATE accumulative_sales_per_product
+    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 14)
+    WHERE item_id = 14;
+END //
+DELIMITER ;
+
+-- *****
+-- VIEWS
+-- *****
+CREATE VIEW receipts_view AS
+SELECT receipt_number, receipt_total
+FROM receipts
+WHERE receipt_total > (SELECT AVG(receipt_total) FROM receipts);
