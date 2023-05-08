@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Random;
 
-public class HelloApplication extends Application {
+public class RegisterApplication extends Application {
     //Lambda expression shenanigans forced me to put the objects used for SQL outside the start method
     /*
      * SQL OBJECTS
