@@ -68,28 +68,19 @@ public class RegisterApplication extends Application {
         Label usernameLabel = new Label("Username:");
         AnchorPane.setLeftAnchor(usernameLabel, 40.0);
         AnchorPane.setTopAnchor(usernameLabel, 100.0);
-
-        //TextField usernameTextField = new TextField();
-        TextField usernameTextField = new TextField("718111");
-
+        TextField usernameTextField = new TextField();
         AnchorPane.setLeftAnchor(usernameTextField, 40.0);
         AnchorPane.setTopAnchor(usernameTextField, 120.0);
         Label passwordLabel = new Label("Password:");
         AnchorPane.setLeftAnchor(passwordLabel, 40.0);
         AnchorPane.setTopAnchor(passwordLabel, 160.0);
-
-        //TextField passwordTextField = new TextField();
-        TextField passwordTextField = new TextField("718111");
-
+        TextField passwordTextField = new TextField();
         AnchorPane.setLeftAnchor(passwordTextField, 40.0);
         AnchorPane.setTopAnchor(passwordTextField, 180.0);
         Label registerNumLabel = new Label("Register Number:");
         AnchorPane.setLeftAnchor(registerNumLabel, 40.0);
         AnchorPane.setTopAnchor(registerNumLabel, 220.0);
-
-        //TextField registerNumTextField = new TextField();
-        TextField registerNumTextField = new TextField("552");
-
+        TextField registerNumTextField = new TextField();
         AnchorPane.setLeftAnchor(registerNumTextField, 40.0);
         AnchorPane.setTopAnchor(registerNumTextField, 240.0);
         Button introductionEnterButton = new Button("ENTER");
@@ -124,9 +115,6 @@ public class RegisterApplication extends Application {
         Button memeberLookupButton = new Button("Member Lookup");
         AnchorPane.setRightAnchor(memeberLookupButton, 40.0);
         AnchorPane.setTopAnchor(memeberLookupButton, 20.0);
-        Button itemLookupButton = new Button("Item Lookup");
-        AnchorPane.setRightAnchor(itemLookupButton, 40.0);
-        AnchorPane.setTopAnchor(itemLookupButton, 60.0);
         Button finishAndPayButton = new Button("Finish and Pay");
         AnchorPane.setRightAnchor(finishAndPayButton, 40.0);
         AnchorPane.setBottomAnchor(finishAndPayButton, 100.0);
@@ -137,7 +125,7 @@ public class RegisterApplication extends Application {
         AnchorPane.setRightAnchor(mainMenuMemberStatus, 40.0);
         AnchorPane.setBottomAnchor(mainMenuMemberStatus, 300.0);
         mainPane.getChildren().addAll(addressLabel, addedItems, addItemByUPCLabel, addItemByUPCTextField,
-                addItemByUPCButton, memeberLookupButton, itemLookupButton, finishAndPayButton,
+                addItemByUPCButton, memeberLookupButton, finishAndPayButton,
                 mainMenuErrorLabel, mainMenuMemberStatus);
 
         /*
