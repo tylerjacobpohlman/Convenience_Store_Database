@@ -415,9 +415,14 @@ INSERT INTO cashier_assignments (register_id, cashier_id)
 VALUES 
 (1, 1),
 (2, 1),
-(4, 5),
 (3, 3),
-(5, 5)
+(4, 5),
+(5, 5),
+-- these last 3 rows are needed since the login procedure only updates rows
+-- these following rows imply that the registers exist, but no one is logged in
+(6, null),
+(7, null),
+(8, null)
 ;
 
 -- have to update each time a new product is added
