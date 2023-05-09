@@ -11,9 +11,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
-import java.util.Random;
 
 public class RegisterApplication extends Application {
     //Lambda expression shenanigans forced me to put the objects used for SQL outside the start method
@@ -200,10 +200,9 @@ public class RegisterApplication extends Application {
                 registerNum = registerNumTextField.getText();
 
                 //when one or more of the text fields have no text
-                if(username.equals("") || password.equals("") || registerNum.equals("")) {
+                if (username.equals("") || password.equals("") || registerNum.equals("")) {
                     introductionErrorLabel.setText("Error: One or more of the text fields are empty!");
-                }
-                else {
+                } else {
                     //tries to establish a connection to the database
                     connection = DriverManager.getConnection(dbUrl, username, password);
 
@@ -220,8 +219,8 @@ public class RegisterApplication extends Application {
                         ps = connection.prepareStatement(addressLookup);
                         //stores the address in the result set
                         rs = ps.executeQuery();
-                        while(rs.next() ) {
-                            addressLabel.setText(rs.getString(1) );
+                        while (rs.next()) {
+                            addressLabel.setText(rs.getString(1));
                         }
                     } catch (SQLException e) {
                         addressLabel.setText("ERROR: Unable to find address\nPlease contact IT specialist");
@@ -230,12 +229,12 @@ public class RegisterApplication extends Application {
                     //if all goes well, on to the next scene!
                     stage.setScene(mainScene);
                 }
-            //any error connecting to the database and/or executing the query
+                //any error connecting to the database and/or executing the query
             } catch (SQLException e) {
                 //introductionErrorLabel.setText("Error: Username and/or password is incorrect");
                 introductionErrorLabel.setText("Error: Unable to establish connection...\n" +
-                                               "Ensure the username, password, cashier  \n" +
-                                               "ID, and register ID are correct");
+                        "Ensure the username, password, cashier  \n" +
+                        "ID, and register ID are correct");
             }
 
         });
@@ -248,10 +247,9 @@ public class RegisterApplication extends Application {
             mainMenuErrorLabel.setText("");
 
             //checks if there's any text at all
-            if(addItemByUPCTextField.getText().isEmpty() ) {
+            if (addItemByUPCTextField.getText().isEmpty()) {
                 mainMenuErrorLabel.setText("Please type in the UPC number first");
-            }
-            else {
+            } else {
 
 
                 //elements of the Item to grab
@@ -285,7 +283,7 @@ public class RegisterApplication extends Application {
         memeberLookupButton.setOnAction(ActionEvent -> {
             //stop the changing of members
             //checks if there's no member
-            if(givenMember == null) {
+            if (givenMember == null) {
                 stage.setScene(memberIDScene);
             } else {
                 mainMenuErrorLabel.setText("Membership already inputted...");
@@ -311,36 +309,36 @@ public class RegisterApplication extends Application {
                 ps = connection.prepareStatement(createReceipt);
                 //grabs the receipt number that was created
                 rs = ps.executeQuery();
-                while(rs.next() ) {
+                while (rs.next()) {
                     receiptNumber = Integer.parseInt(rs.getString(1));
                 }
-            //unlikely to throw an error, so just try again if there's an issue
+                //unlikely to throw an error, so just try again if there's an issue
             } catch (SQLException e) {
                 introductionErrorLabel.setText("Please try again...");
             }
 
             try {
                 //adds all the items to the receipt_details table
-                for(int i = 0; i < addedItems.getItems().size(); i++) {
+                for (int i = 0; i < addedItems.getItems().size(); i++) {
                     String addItem = "CALL addItemToReceipt('" + addedItems.getItems().get(i).getUpc() + "', "
                             + receiptNumber + ")";
                     ps = connection.prepareStatement(addItem);
                     ps.execute();
                 }
-            //highly unlikely that, considering everything else worked, this would too...
-            //so this is here for debugging purposes
+                //highly unlikely that, considering everything else worked, this would too...
+                //so this is here for debugging purposes
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
 
 
-            for(int i = 0; i < addedItems.getItems().size(); i++) {
+            for (int i = 0; i < addedItems.getItems().size(); i++) {
 
                 double itemAmount = addedItems.getItems().get(i).getPrice();
 
                 double discount = 0.0;
                 //only grabs the discount if there's a given member
-                if (givenMember != null ) {
+                if (givenMember != null) {
                     discount = addedItems.getItems().get(i).getDiscount();
                 }
 
@@ -356,7 +354,7 @@ public class RegisterApplication extends Application {
                 ps = connection.prepareStatement(getStateTax);
                 //stores the address in the result set
                 rs = ps.executeQuery();
-                while(rs.next() ) {
+                while (rs.next()) {
                     stateTax = Double.parseDouble(rs.getString(1));
                 }
 
@@ -393,10 +391,11 @@ public class RegisterApplication extends Application {
 
             }
             //if there's a phone number provided
-            else if(!phoneNumberTextField.getText().isEmpty()){
+            else if (!phoneNumberTextField.getText().isEmpty()) {
                 //grabs the phone number
                 //also removes all the misc. chars when someone types in a phone number and just keeps the digits
-                String phoneNumber = phoneNumberTextField.getText().replaceAll("[^0-9]", "");;
+                String phoneNumber = phoneNumberTextField.getText().replaceAll("[^0-9]", "");
+                ;
 
                 String memberPhoneLookup = "Call memberPhoneLookup('" + phoneNumber + "')";
 
@@ -409,7 +408,7 @@ public class RegisterApplication extends Application {
                     ps = connection.prepareStatement(memberPhoneLookup);
                     //stores the member in the result set
                     rs = ps.executeQuery();
-                    while(rs.next() ) {
+                    while (rs.next()) {
                         accountNum = rs.getString(1);
                         firstName = rs.getString(2);
                         lastName = rs.getString(3);
@@ -438,7 +437,7 @@ public class RegisterApplication extends Application {
                 try {
                     ps = connection.prepareStatement(memberPhoneLookup);
                     rs = ps.executeQuery();
-                    while(rs.next() ) {
+                    while (rs.next()) {
                         firstName = rs.getString(1);
                         lastName = rs.getString(2);
                         //initializes the member using the grabbed attributes
@@ -447,8 +446,7 @@ public class RegisterApplication extends Application {
                     //shows the membership in the main menu and sets the scene in the main menu
                     mainMenuMemberStatus.setText(givenMember.toString());
                     stage.setScene(mainScene);
-                }
-                catch (SQLException e) {
+                } catch (SQLException e) {
                     memberIDErrorLabel.setText("Unable to find membership with provided account number");
                 }
             }
@@ -469,10 +467,9 @@ public class RegisterApplication extends Application {
 
                 double amountPaid = Double.parseDouble(amountPaidTextField.getText());
 
-                if(amountPaid < amountDue ) {
+                if (amountPaid < amountDue) {
                     paymentErrorLabel.setText("Amount paid must be greater or equal to amount due");
-                }
-                else {
+                } else {
 
                     String finalizeReceipt = "CALL finalizeReceipt(" + receiptNumber + " ," + amountPaid + ")";
 
@@ -480,6 +477,26 @@ public class RegisterApplication extends Application {
                     ps.execute();
 
                     changeDueLabel.setText("Change Due: " + String.format("%.2f", amountPaid - amountDue));
+
+                    /*
+                     * Prints receipt to file
+                     */
+                    FileWriter fw = new FileWriter("receipt.txt");
+
+                    fw.write(addressLabel.getText() + "\n");
+                    fw.write("****************************************************" + "\n");
+                    for (int i = 0; i < addedItems.getItems().size(); i++) {
+                        fw.write(addedItems.getItems().get(i).toString() + "\n");
+                        fw.write("----------------------------------------------------" + "\n");
+                    }
+
+                    fw.write("Amount Paid: $" + String.format("%.2f", amountPaid) + "\n");
+                    fw.write("Change Due: $" + String.format("%.2f", amountPaid - amountDue) + "\n");
+                    if(givenMember != null) {
+                        fw.write(givenMember.toString() );
+                    }
+
+                    fw.close();
                 }
             }
             //invalid input where the amount paid isn't a numeric value
@@ -487,7 +504,7 @@ public class RegisterApplication extends Application {
                 paymentErrorLabel.setText("Invalid input! Enter numeric values only...");
             }
             //highly unlikely this will fail considering everything else succeeded up to this point
-            catch (SQLException e) {
+            catch (SQLException | IOException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -516,7 +533,7 @@ public class RegisterApplication extends Application {
          */
         stage.setOnCloseRequest(event -> {
             //fixes case where program is closed at introduction scene
-            if(connection != null) {
+            if (connection != null) {
                 //calls the logoff procedure from the database
                 String logoff = "CALL cashierRegisterLogoff('" + registerNum + "')";
                 try {
@@ -530,7 +547,6 @@ public class RegisterApplication extends Application {
         });
 
 
-
         stage.setTitle("Register");
         stage.show();
     }
@@ -539,3 +555,4 @@ public class RegisterApplication extends Application {
         launch();
     }
 }
+
