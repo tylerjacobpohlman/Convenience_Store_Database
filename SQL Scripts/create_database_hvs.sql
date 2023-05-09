@@ -874,9 +874,9 @@ SET GLOBAL event_scheduler = ON;
 DROP EVENT IF EXISTS monthly_items_total;
 DELIMITER //
 CREATE EVENT monthly_items_total
-    -- every month of the 6th, the accumulative_sales_per_product
+    -- every month of the 9th, the accumulative_sales_per_product
     -- table is updated
-    ON SCHEDULE AT '2023-05-06 12:00:00' + INTERVAL 1 MONTH
+    ON SCHEDULE AT '2023-05-09 10:30:00' + INTERVAL 1 MONTH
 DO BEGIN
     -- item_id 1
     UPDATE accumulative_sales_per_product
@@ -950,13 +950,6 @@ DO BEGIN
     SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 9)
     WHERE item_id = 9;
 
-    UPDATE accumulative_sales_per_product
-    SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 9)
-    WHERE item_id = 9;
-    UPDATE accumulative_sales_per_product
-    SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 9)
-    WHERE item_id = 9;
-
     -- item_id 10
     UPDATE accumulative_sales_per_product
     SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 10)
@@ -989,7 +982,7 @@ DO BEGIN
     SET sold_qty = (SELECT SUM(item_quantity) FROM receipt_details WHERE item_id = 13)
     WHERE item_id = 13;
     
-        -- item_id 12
+        -- item_id 14
     UPDATE accumulative_sales_per_product
     SET total_sales = (SELECT SUM(item_total) FROM receipt_details WHERE item_id = 14)
     WHERE item_id = 14;
