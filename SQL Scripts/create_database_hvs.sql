@@ -40,9 +40,6 @@ CREATE TABLE cashiers
 	cashier_id INT PRIMARY KEY AUTO_INCREMENT,
     -- foreign key, every cashier must be assigned to a stor
     store_id INT NOT NULL,
-    -- up 1,000,000 employees per store
-    -- can always increase later
-    cashier_number CHAR(6) NOT NULL UNIQUE,
     -- cashiers might share the same name, so no need for UNIQUE
     cashier_first_name VARCHAR(32),
     cashier_last_name VARCHAR(32),
@@ -355,18 +352,18 @@ VALUES
 (2558, '360 6th Avenue', 'New York City', 'NY', '10011', '(212) 375-9401'),
 (3999, '401 Chestnut St.', 'Carnegie', 'PA', '15106', '(412) 279-5020')
 ;
-INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name, cashier_password)
+INSERT INTO cashiers (store_id, cashier_id, cashier_first_name, cashier_last_name, cashier_password)
 VALUES
 -- for sake of simplicity, the employee number is their password
 -- each store has a unique self help cashier for self checkout
-(3329, '718111', 'SELF', 'HELP', '718111'),
-(3301, '72575', 'SELF', 'HELP', '72575'),
-(2558, '648172', 'SELF', 'HELP', '648172'),
-(3329, '540367', 'Sally', 'Sue', '540367'),
-(2558, '535113', 'Dwanye', 'The Rock', '535113'),
-(3301, '394137', 'Liam', 'Wasserman', '394137'),
-(3301, '716281', 'Jace', 'Margs', '716281'),
-(3999, '347242', 'Josh', 'Margulies', '347242')
+(3329, 718111, 'SELF', 'HELP', '718111'),
+(3301, 72575, 'SELF', 'HELP', '72575'),
+(2558, 648172, 'SELF', 'HELP', '648172'),
+(3329, 540367, 'Sally', 'Sue', '540367'),
+(2558, 535113, 'Dwanye', 'The Rock', '535113'),
+(3301, 39413, 'Liam', 'Wasserman', '394137'),
+(3301, 71628, 'Jace', 'Margs', '716281'),
+(3999, 347242, 'Josh', 'Margulies', '347242')
 ;
 INSERT INTO registers (store_id, register_number, register_type)
 VALUES
@@ -410,11 +407,11 @@ VALUES
 -- cashier's name for a receipt.
 INSERT INTO cashier_assignments (register_id, cashier_id)
 VALUES 
-(1, 1),
-(2, 1),
-(3, 3),
-(4, 5),
-(5, 5),
+(1, 718111),
+(2, 718111),
+(3, 648172),
+(4, 535113),
+(5, 535113),
 -- these last 3 rows are needed since the login procedure only updates rows
 -- these following rows imply that the registers exist, but no one is logged in
 (6, null),
@@ -496,16 +493,16 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE addCashier(
     given_store_id CHAR(5),
-    given_cashier_number CHAR(6),
+    given_cashier_id INT,
     given_first_name VARCHAR(32),
     given_last_name VARCHAR(32)
 )
 BEGIN
-    INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name)
+    INSERT INTO cashiers (store_id, cashier_id, cashier_first_name, cashier_last_name)
     VALUES 
     (
     (SELECT store_id FROM stores WHERE store_id = given_store_id),
-    given_cashier_number,
+    given_cashier_id,
     given_first_name,
     given_last_name
     );
@@ -543,19 +540,19 @@ DELIMITER ;
 -- cashierRegisterLogin
 DELIMITER //
 CREATE PROCEDURE cashierRegisterLogin(
-    given_cashier_number CHAR(6),
+    given_cashier_id INT,
     given_register_number VARCHAR(16)
 )
 BEGIN
     -- creates exception for invalid register_id and/or cashier_id
     DECLARE no_such_register_cashier CONDITION FOR SQLSTATE '45000';
-    IF given_cashier_number NOT IN (SELECT cashier_number FROM cashiers) 
+    IF given_cashier_id NOT IN (SELECT cashier_id FROM cashiers) 
     OR given_register_number NOT IN (SELECT register_number FROM registers) THEN
         SIGNAL no_such_register_cashier SET MESSAGE_TEXT = 'No such register_id and/or cashier_id exists';
     END IF;
 
     UPDATE cashier_assignments
-    SET cashier_id = (SELECT cashier_id FROM cashiers WHERE cashier_number = given_cashier_number)
+    SET cashier_id = (SELECT cashier_id FROM cashiers WHERE cashier_id = given_cashier_id)
     WHERE register_id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
 END //
 DELIMITER ;

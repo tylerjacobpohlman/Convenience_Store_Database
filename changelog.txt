@@ -3,6 +3,8 @@
 SQL Scripts
 - removed store_number from stores table
 - replaced all references of store_number with store_id
+- removed cashier_number from cashiers table
+- replaced all references of cashier_number with cashier_id
 REGISTER TERMINAL
 - finished login scene
 ------------------------------------------------------------
