@@ -54,8 +54,6 @@ CREATE TABLE registers
 	register_id INT PRIMARY KEY AUTO_INCREMENT,
     -- foreign key
     store_id INT NOT NULL,
-    -- every unique store has a unique register number, so there's no 2 registers of the same number in different stores
-    register_number VARCHAR(16) NOT NULL UNIQUE,
     -- the type is important because self always use a SELF HELP cashier
     register_type ENUM('Self', 'Clerk', 'Other'),
     -- The relationship to the stores table isn't necessarily needed, it just speeds up inquiries since going from registers
@@ -271,22 +269,7 @@ BEGIN
     RETURN(name);
 END //
 DELIMITER ;
--- registerIDFromNumber
-DROP FUNCTION IF EXISTS registerIDFromNumber;
-DELIMITER //
-CREATE FUNCTION registerIDFromNumber(
-    given_register_number VARCHAR(16)
-)
-RETURNS INT
-DETERMINISTIC
-BEGIN
-    DECLARE id INT;
-    SET id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
-
-    RETURN(id);
-END //
-DELIMITER ;
-
+-- memberIDFromNumber
 DROP FUNCTION IF EXISTS memberIDFromNumber;
 DELIMITER //
 CREATE FUNCTION memberIDFromNumber(
@@ -361,20 +344,20 @@ VALUES
 (2558, 648172, 'SELF', 'HELP', '648172'),
 (3329, 540367, 'Sally', 'Sue', '540367'),
 (2558, 535113, 'Dwanye', 'The Rock', '535113'),
-(3301, 39413, 'Liam', 'Wasserman', '394137'),
-(3301, 71628, 'Jace', 'Margs', '716281'),
+(3301, 394137, 'Liam', 'Wasserman', '394137'),
+(3301, 716281, 'Jace', 'Margs', '716281'),
 (3999, 347242, 'Josh', 'Margulies', '347242')
 ;
-INSERT INTO registers (store_id, register_number, register_type)
+INSERT INTO registers (store_id, register_id, register_type)
 VALUES
-(3329, '552', 'Self'),
-(3329, '443', 'Self'),
-(3301, '987', 'Self'),
-(5759, '448', 'Clerk'),
-(3329, '580', 'Clerk'),
-(3301, '3452', 'Clerk'),
-(5759, '1234', 'Clerk'),
-(3999, '3344', 'Clerk')
+(3329, 552, 'Self'),
+(3329, 443, 'Self'),
+(3301, 987, 'Self'),
+(5759, 448, 'Clerk'),
+(3329, 580, 'Clerk'),
+(3301, 3452, 'Clerk'),
+(5759, 1234, 'Clerk'),
+(3999, 3344, 'Clerk')
 ;
 INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage)
 VALUES 
@@ -407,16 +390,16 @@ VALUES
 -- cashier's name for a receipt.
 INSERT INTO cashier_assignments (register_id, cashier_id)
 VALUES 
-(1, 718111),
-(2, 718111),
-(3, 648172),
-(4, 535113),
-(5, 535113),
+(552, 718111),
+(443, 718111),
+(987, 648172),
+(448, 535113),
+(580, 535113),
 -- these last 3 rows are needed since the login procedure only updates rows
 -- these following rows imply that the registers exist, but no one is logged in
-(6, null),
-(7, null),
-(8, null)
+(3452, null),
+(1234, null),
+(3344, null)
 ;
 
 -- have to update each time a new product is added
@@ -429,11 +412,11 @@ VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14)
 -- *************************
 INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
 VALUES
-(1, 1, 49654864,'2023-01-01 22:10:26', receiptsCashierName(1) ),
-(4, NULL, 23930097,'2023-04-08 13:05:00', receiptsCashierName(4) ),
-(2, 3, 52286396, NOW(), receiptsCashierName(2) ),
-(1, 1, 68883706, '2023-05-01 12:06:53', receiptsCashierName(1) ),
-(3, NULL, 44351438, '2023-05-04 10:53', receiptsCashierName(3));
+(552, 1, 49654864,'2023-01-01 22:10:26', receiptsCashierName(552) ),
+(448, NULL, 23930097,'2023-04-08 13:05:00', receiptsCashierName(448) ),
+(443, 3, 52286396, NOW(), receiptsCashierName(443) ),
+(552, 1, 68883706, '2023-05-01 12:06:53', receiptsCashierName(552) ),
+(987, NULL, 44351438, '2023-05-04 10:53', receiptsCashierName(987));
 
 INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
 VALUES
@@ -509,16 +492,18 @@ BEGIN
 END //
 DELIMITER ;
 -- addRegister
+-- NEED TO REWORK! CREATE TWO OF THE SAME FUNCTIONS... ONE AUTO INCREMENTS REGISTER_ID AND THE OTHER
+-- ALLOWS MANUAL ENTRY OF REGISTER_ID (WITH CHECK IF REGISTER_ID IS ALREADY IN REGISTERS TABLE)
 DELIMITER //
 CREATE PROCEDURE addRegister(
     given_store_id CHAR(5),
-    given_register_number VARCHAR(16),
+    given_register_id VARCHAR(16),
     given_register_type ENUM('Self','Clerk','Other')
 )
 BEGIN
-    INSERT INTO registers (store_id, register_number, register_type)
+    INSERT INTO registers (store_id, register_id, register_type)
     VALUES ((SELECT store_id FROM stores WHERE store_id = given_store_id), 
-    given_register_number, given_register_type);
+    given_register_id, given_register_type);
 END //
 DELIMITER ;
 -- addMember
@@ -541,47 +526,47 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE cashierRegisterLogin(
     given_cashier_id INT,
-    given_register_number VARCHAR(16)
+    given_register_id INT
 )
 BEGIN
     -- creates exception for invalid register_id and/or cashier_id
     DECLARE no_such_register_cashier CONDITION FOR SQLSTATE '45000';
     IF given_cashier_id NOT IN (SELECT cashier_id FROM cashiers) 
-    OR given_register_number NOT IN (SELECT register_number FROM registers) THEN
+    OR given_register_id NOT IN (SELECT register_id FROM registers) THEN
         SIGNAL no_such_register_cashier SET MESSAGE_TEXT = 'No such register_id and/or cashier_id exists';
     END IF;
 
     UPDATE cashier_assignments
     SET cashier_id = (SELECT cashier_id FROM cashiers WHERE cashier_id = given_cashier_id)
-    WHERE register_id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
+    WHERE register_id = (SELECT register_id FROM registers WHERE register_id = given_register_id);
 END //
 DELIMITER ;
 -- cashierRegisterLogoff
 DELIMITER //
 CREATE PROCEDURE cashierRegisterLogoff(
-    given_register_number VARCHAR(16)
+    given_register_id INT
 )
 BEGIN
     -- creates exception for invalid register_id and/or cashier_id
     DECLARE no_such_register CONDITION FOR SQLSTATE '45000';
-    IF given_register_number NOT IN (SELECT register_number FROM registers) THEN
+    IF given_register_id NOT IN (SELECT register_id FROM registers) THEN
         SIGNAL no_such_register SET MESSAGE_TEXT = 'No such register_id exists';
     END IF;
 
     UPDATE cashier_assignments
     SET cashier_id = null
-    WHERE register_id = (SELECT register_id FROM registers WHERE register_number = given_register_number);
+    WHERE register_id = (SELECT register_id FROM registers WHERE register_id = given_register_id);
 END //
 DELIMITER ;
 -- storeAddressLookupFromRegister
 DELIMITER //
 CREATE PROCEDURE storeAddressLookupFromRegister(
-    given_register_number VARCHAR(16)
+    given_register_id INT
 )
 BEGIN
     SELECT CONCAT(store_address, ', ', store_city, ', ', store_state, ' ', store_zip)
     FROM stores
-    WHERE store_id = (SELECT store_id FROM registers WHERE register_number = given_register_number)
+    WHERE store_id = (SELECT store_id FROM registers WHERE register_id = given_register_id)
     ;
 
 END //
@@ -645,7 +630,7 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS createReceipt;
 DELIMITER //
 CREATE PROCEDURE createReceipt(
-    given_register_number VARCHAR(16),
+    given_register_id INT,
     given_member_number VARCHAR(20)
 )
 BEGIN
@@ -657,12 +642,12 @@ BEGIN
     INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
     VALUES
     (
-    registerIDFromNumber(given_register_number),
+    given_register_id,
     memberIDFromNumber(given_member_number),
     created_receipt_number,
     -- null for now before items are added
     null,
-    receiptsCashierName((SELECT register_id FROM registers WHERE register_number = given_register_number))
+    receiptsCashierName((SELECT register_id FROM registers WHERE register_id = given_register_id))
 
     );
 

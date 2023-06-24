@@ -207,7 +207,7 @@ public class RegisterApplication extends Application {
                     connection = DriverManager.getConnection(dbUrl, username, password);
 
                     //ties the login procedure from the database
-                    String login = "CALL cashierRegisterLogin('" + username + "', '" + registerNum + "')";
+                    String login = "CALL cashierRegisterLogin(" + username + ", '" + registerNum + "')";
                     ps = connection.prepareStatement(login);
                     ps.execute();
 
@@ -215,7 +215,7 @@ public class RegisterApplication extends Application {
                     //NOTE: This is incredibly sloppy! I wasn't sure how to grab the result of a function, so I turned
                     // storeAddressLookupFromRegister into a procedure and grabbed the address this way
                     try {
-                        String addressLookup = "Call storeAddressLookupFromRegister('" + registerNum + "')";
+                        String addressLookup = "Call storeAddressLookupFromRegister(" + registerNum + ")";
                         ps = connection.prepareStatement(addressLookup);
                         //stores the address in the result set
                         rs = ps.executeQuery();
@@ -300,7 +300,7 @@ public class RegisterApplication extends Application {
                 //if there is no provided membership
                 if (givenMember == null) {
 
-                    createReceipt = "CALL createReceipt('" + registerNum + "', null)";
+                    createReceipt = "CALL createReceipt(" + registerNum + ", null)";
                 }
                 //a membership was provided
                 else {
@@ -535,7 +535,7 @@ public class RegisterApplication extends Application {
             //fixes case where program is closed at introduction scene
             if (connection != null) {
                 //calls the logoff procedure from the database
-                String logoff = "CALL cashierRegisterLogoff('" + registerNum + "')";
+                String logoff = "CALL cashierRegisterLogoff(" + registerNum + ")";
                 try {
                     ps = connection.prepareStatement(logoff);
                     rs = ps.executeQuery();

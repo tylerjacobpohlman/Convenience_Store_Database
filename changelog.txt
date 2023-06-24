@@ -5,6 +5,9 @@ SQL Scripts
 - replaced all references of store_number with store_id
 - removed cashier_number from cashiers table
 - replaced all references of cashier_number with cashier_id
+- removed function registerIDFromNumber
+- removed register_number from registers table
+- removed all references of register_number with register_id
 REGISTER TERMINAL
-- finished login scene
+- updated RegisterLogin, storeAddressLookup, createReceipt, and RegisterLogoff
 ------------------------------------------------------------
