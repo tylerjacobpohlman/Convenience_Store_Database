@@ -1,15 +1,8 @@
 ------------------------------------------------------------
-04/29/2023
+06/24/2023
 SQL Scripts
-- added login procedure
+- removed store_number from stores table
+- replaced all references of store_number with store_id
 REGISTER TERMINAL
 - finished login scene
 ------------------------------------------------------------
-04/28/2023
-SQL SCRIPTS
-- reworked cashier_assignments table, such that it only stores cashier_id and register_id
-- added trigger cashier_assignments_after_update, which stores the login and log offs for the registers
-- added more items in create database sql file
-DATABASE ADMIN TERMINAL
-- completed context menus for adding item, store, register, member, and cashier
-- completed ability to add item, store, register, member, and cashier

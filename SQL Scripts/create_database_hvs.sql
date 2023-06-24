@@ -24,9 +24,6 @@ CREATE TABLE states
 CREATE TABLE stores
 (
 	store_id INT PRIMARY KEY AUTO_INCREMENT,
-    -- stores the store number as a char since not numeric computations are done on it
-    -- "HVS" can have up to 99,999 stores, but an ALTER TABLE command can up the size
-    store_number CHAR(5) NOT NULL UNIQUE,
     store_address VARCHAR(50),
     store_city VARCHAR(50),
 	-- for state taxes
@@ -350,37 +347,37 @@ VALUES
 ('AK', 0.02),
 ('PA', 0.07)
 ;
-INSERT INTO stores (store_number, store_address, store_city, store_state, store_zip, store_phone)
+INSERT INTO stores (store_id, store_address, store_city, store_state, store_zip, store_phone)
 VALUES 
-('3329', '11706 Clifton Boulevard 117th & Clifton', 'Lakewood', 'OH', '44107', '(216) 228-9296'),
-('3301', '28100 Chagrin Blvd', 'Woodmere', 'OH', '44122', '(216) 831-1466'),
-('5759', '3950 Turkeyfoot Rd', 'Erlanger', 'KY', '41018', '(859) 647-6211'),
-('2558', '360 6th Avenue', 'New York City', 'NY', '10011', '(212) 375-9401'),
-('3999', '401 Chestnut St.', 'Carnegie', 'PA', '15106', '(412) 279-5020')
+(3329, '11706 Clifton Boulevard 117th & Clifton', 'Lakewood', 'OH', '44107', '(216) 228-9296'),
+(3301, '28100 Chagrin Blvd', 'Woodmere', 'OH', '44122', '(216) 831-1466'),
+(5759, '3950 Turkeyfoot Rd', 'Erlanger', 'KY', '41018', '(859) 647-6211'),
+(2558, '360 6th Avenue', 'New York City', 'NY', '10011', '(212) 375-9401'),
+(3999, '401 Chestnut St.', 'Carnegie', 'PA', '15106', '(412) 279-5020')
 ;
 INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name, cashier_password)
 VALUES
 -- for sake of simplicity, the employee number is their password
 -- each store has a unique self help cashier for self checkout
-(1, '718111', 'SELF', 'HELP', '718111'),
-(2, '72575', 'SELF', 'HELP', '72575'),
-(3, '648172', 'SELF', 'HELP', '648172'),
-(1, '540367', 'Sally', 'Sue', '540367'),
-(3, '535113', 'Dwanye', 'The Rock', '535113'),
-(2, '394137', 'Liam', 'Wasserman', '394137'),
-(2, '716281', 'Jace', 'Margs', '716281'),
-(4, '347242', 'Josh', 'Margulies', '347242')
+(3329, '718111', 'SELF', 'HELP', '718111'),
+(3301, '72575', 'SELF', 'HELP', '72575'),
+(2558, '648172', 'SELF', 'HELP', '648172'),
+(3329, '540367', 'Sally', 'Sue', '540367'),
+(2558, '535113', 'Dwanye', 'The Rock', '535113'),
+(3301, '394137', 'Liam', 'Wasserman', '394137'),
+(3301, '716281', 'Jace', 'Margs', '716281'),
+(3999, '347242', 'Josh', 'Margulies', '347242')
 ;
 INSERT INTO registers (store_id, register_number, register_type)
 VALUES
-(1, '552', 'Self'),
-(1, '443', 'Self'),
-(2, '987', 'Self'),
-(3, '448', 'Clerk'),
-(1, '580', 'Clerk'),
-(2, '3452', 'Clerk'),
-(3, '1234', 'Clerk'),
-(5, '3344', 'Clerk')
+(3329, '552', 'Self'),
+(3329, '443', 'Self'),
+(3301, '987', 'Self'),
+(5759, '448', 'Clerk'),
+(3329, '580', 'Clerk'),
+(3301, '3452', 'Clerk'),
+(5759, '1234', 'Clerk'),
+(3999, '3344', 'Clerk')
 ;
 INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage)
 VALUES 
@@ -491,14 +488,14 @@ CREATE PROCEDURE addStore(
     given_phone VARCHAR(20)
 )
 BEGIN
-    INSERT INTO stores (store_number, store_address, store_city, store_state, store_zip, store_phone)
+    INSERT INTO stores (store_id, store_address, store_city, store_state, store_zip, store_phone)
     VALUES (given_number, given_street, given_city, given_state, given_zip, given_phone);
 END //
 DELIMITER ;
 -- addCashier
 DELIMITER //
 CREATE PROCEDURE addCashier(
-    given_store_number CHAR(5),
+    given_store_id CHAR(5),
     given_cashier_number CHAR(6),
     given_first_name VARCHAR(32),
     given_last_name VARCHAR(32)
@@ -507,7 +504,7 @@ BEGIN
     INSERT INTO cashiers (store_id, cashier_number, cashier_first_name, cashier_last_name)
     VALUES 
     (
-    (SELECT store_id FROM stores WHERE store_number = given_store_number),
+    (SELECT store_id FROM stores WHERE store_id = given_store_id),
     given_cashier_number,
     given_first_name,
     given_last_name
@@ -517,13 +514,13 @@ DELIMITER ;
 -- addRegister
 DELIMITER //
 CREATE PROCEDURE addRegister(
-    given_store_number CHAR(5),
+    given_store_id CHAR(5),
     given_register_number VARCHAR(16),
     given_register_type ENUM('Self','Clerk','Other')
 )
 BEGIN
     INSERT INTO registers (store_id, register_number, register_type)
-    VALUES ((SELECT store_id FROM stores WHERE store_number = given_store_number), 
+    VALUES ((SELECT store_id FROM stores WHERE store_id = given_store_id), 
     given_register_number, given_register_type);
 END //
 DELIMITER ;
