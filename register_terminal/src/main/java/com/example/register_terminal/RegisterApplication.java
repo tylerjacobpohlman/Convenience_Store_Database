@@ -428,7 +428,7 @@ public class RegisterApplication extends Application {
                 //grabs the account number
                 String accountNum = memberIDTextField.getText();
 
-                String memberPhoneLookup = "Call memberAccountNumberLookup('" + accountNum + "')";
+                String memberPhoneLookup = "Call memberAccountNumberLookup(" + accountNum + ")";
 
                 //elements of the member to add
                 String firstName;

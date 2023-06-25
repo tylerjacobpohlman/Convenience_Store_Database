@@ -101,8 +101,6 @@ ON items (item_upc);
 CREATE TABLE members
 (
 	member_id INT PRIMARY KEY AUTO_INCREMENT,
-    -- every member must have an account number, and that account number is unique to each member
-    member_account_number VARCHAR(20) NOT NULL UNIQUE,
     member_first_name VARCHAR(32),
     member_last_name VARCHAR(32),
     -- multiple rewards account can't share the same credentials
@@ -114,9 +112,6 @@ CREATE TABLE members
 -- phone number is used to look up rewards membership, so it is indexed
 CREATE INDEX idx_phone
 ON members (member_phone_number);
--- membership are also scanned in, which is basically just the account number
-CREATE INDEX idx_account
-ON members (member_account_number);
 -- CREATES RECEIPTS TABLE
 -- *WARNING* must create registers, states, and members tables first
 CREATE TABLE receipts
@@ -269,21 +264,6 @@ BEGIN
     RETURN(name);
 END //
 DELIMITER ;
--- memberIDFromNumber
-DROP FUNCTION IF EXISTS memberIDFromNumber;
-DELIMITER //
-CREATE FUNCTION memberIDFromNumber(
-    given_member_number VARCHAR(20)
-)
-RETURNS INT
-DETERMINISTIC
-BEGIN
-    DECLARE id INT;
-    SET id = (SELECT member_id FROM members WHERE member_account_number = given_member_number);
-
-    RETURN(id);
-END //
-DELIMITER ;
 -- receiptIDFromNumber
 DROP FUNCTION IF EXISTS receiptIDFromNumber;
 DELIMITER //
@@ -376,13 +356,13 @@ VALUES
 ('2347863425897', 'Swiffer Heavy Duty Dusters 3 dusters', 6.99, 0.0),
 ('0980983425980', 'Lysol Disinfecting Wipes Lemon & Lime Blossom 80 wet wipes 20.3 oz', 10.29, 0.0);
 
-INSERT INTO members (member_account_number, member_first_name, member_last_name, member_phone_number, member_email_address)
+INSERT INTO members (member_id, member_first_name, member_last_name, member_phone_number, member_email_address)
 VALUES
-('6142965', 'Tyler', 'Pohlman', '2169700354', 'tylerpp@gmail.com'),
-('29166057', 'Spencer', 'Kornspan', '4406427483', 'spencervenom@gmail.com'),
-('24389822', 'Phillip', 'McCourt', '3125537890', 'prmc64@icloud.com'),
-('28305188', 'Duane', 'Pohlman', '2163435478', 'duanedd@gmail.com'),
-('49403382', 'John', 'Smith', '9312333387', 'smithingsmith@smith.com')
+(6142965, 'Tyler', 'Pohlman', '2169700354', 'tylerpp@gmail.com'),
+(29166057, 'Spencer', 'Kornspan', '4406427483', 'spencervenom@gmail.com'),
+(24389822, 'Phillip', 'McCourt', '3125537890', 'prmc64@icloud.com'),
+(28305188, 'Duane', 'Pohlman', '2163435478', 'duanedd@gmail.com'),
+(49403382, 'John', 'Smith', '9312333387', 'smithingsmith@smith.com')
 ;
 
 -- Realistically, these inserts shouldn't be here b/c it implies that the given cashiers are signed into the given
@@ -412,10 +392,10 @@ VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14)
 -- *************************
 INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
 VALUES
-(552, 1, 49654864,'2023-01-01 22:10:26', receiptsCashierName(552) ),
+(552, 6142965, 49654864,'2023-01-01 22:10:26', receiptsCashierName(552) ),
 (448, NULL, 23930097,'2023-04-08 13:05:00', receiptsCashierName(448) ),
-(443, 3, 52286396, NOW(), receiptsCashierName(443) ),
-(552, 1, 68883706, '2023-05-01 12:06:53', receiptsCashierName(552) ),
+(443, 24389822, 52286396, NOW(), receiptsCashierName(443) ),
+(552, 6142965, 68883706, '2023-05-01 12:06:53', receiptsCashierName(552) ),
 (987, NULL, 44351438, '2023-05-04 10:53', receiptsCashierName(987));
 
 INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
@@ -507,18 +487,19 @@ BEGIN
 END //
 DELIMITER ;
 -- addMember
+-- MIGHT NEED TO CHANGE TO FUNCTION WHICH RETURN MEMBER_ID FOR USER
 DELIMITER //
 CREATE PROCEDURE addMember(
-    given_account_number VARCHAR(20),
+    given_member_id INT,
     given_first_name VARCHAR(32),
     given_last_name VARCHAR(32),
     given_phone_number VARCHAR(16),
     given_email_address VARCHAR(64)
 )
 BEGIN
-    INSERT INTO members (member_account_number, member_first_name, member_last_name,
+    INSERT INTO members (member_first_name, member_last_name,
         member_phone_number, member_email_address)
-    VALUES (given_account_number, given_first_name, given_last_name,
+    VALUES (given_first_name, given_last_name,
         given_phone_number, given_email_address);
 END //
 DELIMITER ;
@@ -602,7 +583,7 @@ BEGIN
         SIGNAL no_such_member SET MESSAGE_TEXT = 'No such phone_number exists';
     END IF;
 
-    SELECT member_account_number, member_first_name, member_last_name
+    SELECT member_id, member_first_name, member_last_name
     FROM members
     WHERE member_phone_number = given_phone_number;
 END //
@@ -610,20 +591,20 @@ DELIMITER ;
 -- memberAccountNumberLookup
 DELIMITER //
 CREATE PROCEDURE memberAccountNumberLookup(
-    given_account_number VARCHAR(20)
+    given_member_id INT
 )
 BEGIN
     -- creates exception member no matching member is found
     DECLARE no_such_account_num CONDITION FOR SQLSTATE '45000';
 
-    IF given_account_number NOT IN (SELECT member_account_number FROM members)
+    IF given_member_id NOT IN (SELECT member_id FROM members)
     THEN
         SIGNAL no_such_account_num SET MESSAGE_TEXT = 'No such account_number exists';
     END IF;
 
     SELECT member_first_name, member_last_name
     FROM members
-    WHERE member_account_number = given_account_number;
+    WHERE member_id = given_member_id;
 END //
 DELIMITER ;  
 -- createReceipt
@@ -631,7 +612,7 @@ DROP PROCEDURE IF EXISTS createReceipt;
 DELIMITER //
 CREATE PROCEDURE createReceipt(
     given_register_id INT,
-    given_member_number VARCHAR(20)
+    given_member_id INT
 )
 BEGIN
     DECLARE created_receipt_number INT;
@@ -643,7 +624,6 @@ BEGIN
     VALUES
     (
     given_register_id,
-    memberIDFromNumber(given_member_number),
     created_receipt_number,
     -- null for now before items are added
     null,

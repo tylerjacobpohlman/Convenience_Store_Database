@@ -1,4 +1,14 @@
 ------------------------------------------------------------
+06/25/2023
+SQL Scripts
+- removed member_account_number from members table
+- removed memberIDFromNumber function
+- replaced all references of member_account_number with member_id
+REGISTER TERMINAL
+- updated memberPhoneLookup
+
+------------------------------------------------------------
+------------------------------------------------------------
 06/24/2023
 SQL Scripts
 - removed store_number from stores table
