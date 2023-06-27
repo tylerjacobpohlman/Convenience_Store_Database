@@ -167,6 +167,15 @@ CREATE TABLE accumulative_sales_per_product
     sold_qty INT DEFAULT 0,
     total_sales DECIMAL(10,2) DEFAULT 0.0
 );
+-- CREATES INVENTORY TABLE
+CREATE TABLE inventory (
+    store_id INT,
+    item_id INT,
+    item_qty INT NOT NULL,
+    CONSTRAINT pk_inventory PRIMARY KEY (store_id, item_id),
+    CONSTRAINT inventory_fk_stores FOREIGN KEY (store_id) REFERENCES stores(store_id),
+    CONSTRAINT inventory_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id)
+);
 
 -- *****************
 -- CREATE FUNCTIONS
@@ -326,7 +335,7 @@ INSERT INTO items (item_upc, item_name, item_price, item_discount_percentage)
 VALUES 
 ('4334523664435', 'Sprite Zero Lemon-Lime Soda 20 fl oz', 2.59, 0.0),
 ('4235234532453', 'Owyn 20 g Plant-Based Drink Dark Chocolate 12 fl oz', 3.69, 0.10),
-('8764353453456', '	Eboost Super Fuel Energy Drink Sparkling Blue Raspberry 11.5 fl oz', 2.99, 0.50),
+('8764353453456', 'Eboost Super Fuel Energy Drink Sparkling Blue Raspberry 11.5 fl oz', 2.99, 0.50),
 ('9723456897324', 'Met-Rx Crispy Apple Pie Meal Replacement Bar 3.52 oz', 3.59, 0.35),
 ('1224321345435', 'Gold Emblem Abound Dried Organic Mango 4 oz', 2.99, 0.33),
 ('3232321323444', 'Wrigley Extra Long Lasting Flavor Sugarfree Gum Peppermint 15 sticks', 1.59, 0.0),
@@ -363,6 +372,87 @@ VALUES
 (3452, null),
 (1234, null),
 (3344, null)
+;
+
+-- all combination of stores and items must be inserted here
+-- I gave everything an initial value of 10
+INSERT INTO inventory (store_id, item_id, item_qty)
+VALUES
+-- store 2558
+(2558, 1, 10),
+(2558, 2, 10),
+(2558, 3, 10),
+(2558, 4, 10),
+(2558, 5, 10),
+(2558, 6, 10),
+(2558, 7, 10),
+(2558, 8, 10),
+(2558, 9, 10),
+(2558, 10, 10),
+(2558, 11, 10),
+(2558, 12, 10),
+(2558, 13, 10),
+(2558, 14, 10),
+-- store 3301
+(3301, 1, 10),
+(3301, 2, 10),
+(3301, 3, 10),
+(3301, 4, 10),
+(3301, 5, 10),
+(3301, 6, 10),
+(3301, 7, 10),
+(3301, 8, 10),
+(3301, 9, 10),
+(3301, 10, 10),
+(3301, 11, 10),
+(3301, 12, 10),
+(3301, 13, 10),
+(3301, 14, 10),
+-- store 3329
+(3329, 1, 10),
+(3329, 2, 10),
+(3329, 3, 10),
+(3329, 4, 10),
+(3329, 5, 10),
+(3329, 6, 10),
+(3329, 7, 10),
+(3329, 8, 10),
+(3329, 9, 10),
+(3329, 10, 10),
+(3329, 11, 10),
+(3329, 12, 10),
+(3329, 13, 10),
+(3329, 14, 10),
+-- store 3999
+(3999, 1, 10),
+(3999, 2, 10),
+(3999, 3, 10),
+(3999, 4, 10),
+(3999, 5, 10),
+(3999, 6, 10),
+(3999, 7, 10),
+(3999, 8, 10),
+(3999, 9, 10),
+(3999, 10, 10),
+(3999, 11, 10),
+(3999, 12, 10),
+(3999, 13, 10),
+(3999, 14, 10),
+-- store 5759
+(5759, 1, 10),
+(5759, 2, 10),
+(5759, 3, 10),
+(5759, 4, 10),
+(5759, 5, 10),
+(5759, 6, 10),
+(5759, 7, 10),
+(5759, 8, 10),
+(5759, 9, 10),
+(5759, 10, 10),
+(5759, 11, 10),
+(5759, 12, 10),
+(5759, 13, 10),
+(5759, 14, 10)
 ;
 
 -- have to update each time a new product is added
@@ -803,6 +893,7 @@ BEGIN
     SET NEW.item_total = NEW.item_quantity * NEW.item_price;
 END //
 DELIMITER ;
+-- 
 
 -- ******
 -- EVENTS
