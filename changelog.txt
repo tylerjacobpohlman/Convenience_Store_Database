@@ -4,6 +4,11 @@ SQL Scripts
 - removed receipt_number from receipts table
 - removed receiptIDFromNumber function
 - replaced all references of receipt_number with receipt_id
+-- added inventory table to database
+-- added triggers stores_after_insert and items_after_insert
+    -- these triggers ensure any new items and stores added are
+       also added to the inventory table, with all their 
+       unique combinations
 REGISTER TERMINAL
 - 
 ------------------------------------------------------------

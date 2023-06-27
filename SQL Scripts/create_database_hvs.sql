@@ -893,7 +893,36 @@ BEGIN
     SET NEW.item_total = NEW.item_quantity * NEW.item_price;
 END //
 DELIMITER ;
--- 
+-- items_after_insert
+-- after a new item is added, that item is added the inventory table for
+-- each store
+DROP TRIGGER IF EXISTS items_after_insert;
+DELIMITER //
+CREATE TRIGGER items_after_insert
+    AFTER INSERT ON items
+    FOR EACH ROW
+BEGIN
+    -- the default inventory is 0
+    INSERT INTO inventory (store_id, item_id, item_qty)
+    SELECT DISTINCT store_id, NEW.item_id, 0 FROM inventory
+    ;
+END //
+DELIMITER ;
+-- stores_after_insert
+-- after a new store is added, that store is added to the inventory table
+-- with each unique item
+DROP TRIGGER IF EXISTS stores_after_insert;
+DELIMITER //
+CREATE TRIGGER stores_after_insert
+    AFTER INSERT ON stores
+    FOR EACH ROW
+BEGIN
+    -- the default inventory is 0
+    INSERT INTO inventory (item_id, store_id, item_qty)
+    SELECT DISTINCT item_id, NEW.store_id, 0 FROM inventory
+    ;
+END //
+DELIMITER ;
 
 -- ******
 -- EVENTS
