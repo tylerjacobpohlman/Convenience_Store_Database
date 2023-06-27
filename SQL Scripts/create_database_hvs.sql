@@ -121,8 +121,6 @@ CREATE TABLE receipts
     register_id INT NOT NULL,
     -- foreign key, but can be null if customer isn't a member
     member_id INT,
-    -- each receipt has a unique number, and it must have that number
-    receipt_number INT NOT NULL UNIQUE,
     -- the time and date of purchase
     receipt_date_time DATETIME DEFAULT NOW(),
     receipt_subtotal DECIMAL(9,2) DEFAULT 0.0,
@@ -264,21 +262,6 @@ BEGIN
     RETURN(name);
 END //
 DELIMITER ;
--- receiptIDFromNumber
-DROP FUNCTION IF EXISTS receiptIDFromNumber;
-DELIMITER //
-CREATE FUNCTION receiptIDFromNumber(
-    given_receipt_number INT
-)
-RETURNS INT
-DETERMINISTIC
-BEGIN
-    DECLARE id INT;
-    SET id = (SELECT receipt_id FROM receipts WHERE receipt_number = given_receipt_number);
-
-    RETURN(id);
-END //
-DELIMITER ;
 -- itemIDFromUPC
 DROP FUNCTION IF EXISTS itemIDFromUPC;
 DELIMITER //
@@ -390,7 +373,7 @@ VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10), (11), (12), (13), (14)
 -- *************************
 -- COMPLEX INSERT STATEMENTS
 -- *************************
-INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
+INSERT INTO receipts (register_id, member_id, receipt_id, receipt_date_time, receipt_cashier_full_name)
 VALUES
 (552, 6142965, 49654864,'2023-01-01 22:10:26', receiptsCashierName(552) ),
 (448, NULL, 23930097,'2023-04-08 13:05:00', receiptsCashierName(448) ),
@@ -400,12 +383,12 @@ VALUES
 
 INSERT INTO receipt_details (receipt_id, item_id, item_discount_percentage, item_price, item_quantity)
 VALUES
-(1, 2, detailsDiscount(1, 2), detailsPrice(1, 2), 2),
-(1, 1, detailsDiscount(1, 1), detailsPrice(1, 1), 5),
-(2, 3, detailsDiscount(2, 3), detailsPrice(2, 3), 4),
-(3, 1, detailsDiscount(3, 1), detailsPrice(3, 1), 10),
-(4, 4, detailsDiscount(4, 4), detailsPrice(4, 4), 1),
-(5, 4, detailsDiscount(5, 4), detailsPrice(5, 4), 2)
+(49654864, 2, detailsDiscount(1, 2), detailsPrice(1, 2), 2),
+(49654864, 1, detailsDiscount(1, 1), detailsPrice(1, 1), 5),
+(23930097, 3, detailsDiscount(2, 3), detailsPrice(2, 3), 4),
+(52286396, 1, detailsDiscount(3, 1), detailsPrice(3, 1), 10),
+(68883706, 4, detailsDiscount(4, 4), detailsPrice(4, 4), 1),
+(44351438, 4, detailsDiscount(5, 4), detailsPrice(5, 4), 2)
 ;
 
 -- could have done in the insert statement, but it would have gotten too long
@@ -615,25 +598,22 @@ CREATE PROCEDURE createReceipt(
     given_member_id INT
 )
 BEGIN
-    DECLARE created_receipt_number INT;
-    -- grabs the greatest receipt number and adds 1 to it
-    SET created_receipt_number = (SELECT MAX(receipt_number) FROM receipts) + 1;
 
 
-    INSERT INTO receipts (register_id, member_id, receipt_number, receipt_date_time, receipt_cashier_full_name)
+    INSERT INTO receipts (register_id, member_id, receipt_date_time, receipt_cashier_full_name)
     VALUES
     (
     given_register_id,
-    created_receipt_number,
+    given_member_id,
     -- null for now before items are added
     null,
     receiptsCashierName((SELECT register_id FROM registers WHERE register_id = given_register_id))
 
     );
 
-    -- the newest receipt is the greatest receipt, so it is returned by this procedure
-    -- in order to be stored in the java application
-    SELECT MAX(receipt_number) FROM receipts;
+    -- returns the PRIMARY KEY value of the last row inserted
+    -- is per user and is unaffected by other queries that might be running on the server from other users
+    SELECT LAST_INSERT_ID();
 END //
 DELIMITER;
 -- addItemToReceipt
@@ -641,17 +621,17 @@ DROP PROCEDURE IF EXISTS addItemToReceipt;
 DELIMITER //
 CREATE PROCEDURE addItemToReceipt(
     given_upc VARCHAR(20),
-    given_receipt_number INT
+    given_receipt_id INT
 )
 BEGIN
     INSERT INTO receipt_details (receipt_id, item_id, item_total, item_discount_percentage, item_price, item_quantity)
     VALUES
     (
-    receiptIDFromNumber(given_receipt_number),
+    given_receipt_id,
     itemIDFromUPC(given_upc),
     null,
-    detailsDiscount(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
-    detailsPrice(receiptIDFromNumber(given_receipt_number), itemIDFromUPC(given_upc)),
+    detailsDiscount(given_receipt_id, itemIDFromUPC(given_upc)),
+    detailsPrice(given_receipt_id, itemIDFromUPC(given_upc)),
     1
     );
 END //
@@ -659,7 +639,7 @@ END //
 DROP PROCEDURE IF EXISTS finalizeReceipt;
 DELIMITER //
 CREATE PROCEDURE finalizeReceipt(
-    given_receipt_number INT,
+    given_receipt_id INT,
     given_cash DECIMAL(9,2)
 )
 BEGIN
@@ -667,35 +647,35 @@ BEGIN
 
     UPDATE receipts
     SET receipt_subtotal 
-    = (SELECT SUM(item_total) FROM receipt_details WHERE receipt_id = receiptIDFromNumber(given_receipt_number))
+    = (SELECT SUM(item_total) FROM receipt_details WHERE receipt_id = given_receipt_id)
     -- avoid wasting time and only change the receipt_detail that correspond to the receipt
-    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+    WHERE receipt_id = given_receipt_id;
 
     UPDATE receipts
-    SET receipt_total = receipt_subtotal * (1 + receiptsStateTax(receiptIDFromNumber(given_receipt_number)))
-    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+    SET receipt_total = receipt_subtotal * (1 + receiptsStateTax(given_receipt_id))
+    WHERE receipt_id = given_receipt_id;
 
     UPDATE receipts
     SET receipt_date_time = NOW()
-    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+    WHERE receipt_id = given_receipt_id;
 
     UPDATE receipts
     SET receipt_charge = given_cash
-    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+    WHERE receipt_id = given_receipt_id;
 
     UPDATE receipts
     SET receipt_change_due = receipt_charge - receipt_total
-    WHERE receipt_id = receiptIDFromNumber(given_receipt_number);
+    WHERE receipt_id = given_receipt_id;
 END //
 DELIMITER ;
 -- getStateTax
 DROP PROCEDURE IF EXISTS getStateTax;
 DELIMITER //
 CREATE PROCEDURE getStateTax(
-    given_receipt_number INT
+    given_receipt_id INT
 )
 BEGIN
-    SELECT receiptsStateTax(receiptIDFromNumber(given_receipt_number));
+    SELECT receiptsStateTax(given_receipt_id);
 END //
 DELIMITER ;
 
@@ -955,6 +935,6 @@ DELIMITER ;
 -- VIEWS
 -- *****
 CREATE VIEW receipts_view AS
-SELECT receipt_number, receipt_total
+SELECT receipt_id, receipt_total
 FROM receipts
 WHERE receipt_total > (SELECT AVG(receipt_total) FROM receipts);

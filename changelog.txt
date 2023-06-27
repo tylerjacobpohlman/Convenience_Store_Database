@@ -1,4 +1,13 @@
 ------------------------------------------------------------
+06/27/2023
+SQL Scripts
+- removed receipt_number from receipts table
+- removed receiptIDFromNumber function
+- replaced all references of receipt_number with receipt_id
+REGISTER TERMINAL
+- 
+------------------------------------------------------------
+------------------------------------------------------------
 06/25/2023
 SQL Scripts
 - removed member_account_number from members table
@@ -6,7 +15,6 @@ SQL Scripts
 - replaced all references of member_account_number with member_id
 REGISTER TERMINAL
 - updated memberPhoneLookup
-
 ------------------------------------------------------------
 ------------------------------------------------------------
 06/24/2023
