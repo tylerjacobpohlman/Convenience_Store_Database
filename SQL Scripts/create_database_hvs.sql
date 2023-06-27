@@ -286,7 +286,28 @@ BEGIN
     RETURN(id);
 END //
 DELIMITER ;
+-- storeIDFromReceiptID
+DROP FUNCTION IF EXISTS storeIDFromReceiptID
+DELIMITER //
+CREATE FUNCTION storeIDFromReceiptID(
+    given_store_id INT
+)
+RETURNS INT 
+DETERMINISTIC
+BEGIN
+    DECLARE id INT;
+    SET id =
+    (
+        SELECT receipt_id
+        FROM receipts rec 
+            JOIN registers reg ON rec.register_id = reg.register_id
+            JOIN stores s ON s.store_id = reg.store_id
+        WHERE store_id = given_store_id;
+    )
 
+    RETURN(id);
+END //
+DELIMITER ;
 
 -- *******************************************************************************************
 -- The following have simple insert statements since they lack concrete foreign key restraints
@@ -724,6 +745,12 @@ BEGIN
     detailsPrice(given_receipt_id, itemIDFromUPC(given_upc)),
     1
     );
+
+    UPDATE inventory
+    -- remove 1 item from inventory
+    SET inventory.item_qty = inventory.item_qty - 1
+    WHERE item_id = itemIDFromUPC(given_upc) AND 
+    store_id = storeIDFromReceiptID(given_receipt_id);
 END //
 -- finalizeReceipt
 DROP PROCEDURE IF EXISTS finalizeReceipt;

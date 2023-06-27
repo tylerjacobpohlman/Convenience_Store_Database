@@ -9,6 +9,8 @@ SQL Scripts
     -- these triggers ensure any new items and stores added are
        also added to the inventory table, with all their 
        unique combinations
+-- added storeIDFromReceiptID function
+-- updates addItemToReceipt, which now removes 1 from respective inventory row
 REGISTER TERMINAL
 - 
 ------------------------------------------------------------
