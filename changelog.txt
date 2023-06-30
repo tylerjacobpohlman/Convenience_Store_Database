@@ -1,4 +1,14 @@
 ------------------------------------------------------------
+06/30/2023
+SQL Scripts
+- added table returned_inventory
+- added procedure cancelReceipt
+    -- this procedure removes the receipts_fk_members row and receipt_details rows
+       Also, the respective rows are added to returned_inventory
+REGISTER TERMINAL
+- 
+------------------------------------------------------------
+------------------------------------------------------------
 06/27/2023
 SQL Scripts
 - removed receipt_number from receipts table
@@ -11,8 +21,6 @@ SQL Scripts
        unique combinations
 -- added storeIDFromReceiptID function
 -- updates addItemToReceipt, which now removes 1 from respective inventory row
-REGISTER TERMINAL
-- 
 ------------------------------------------------------------
 ------------------------------------------------------------
 06/25/2023

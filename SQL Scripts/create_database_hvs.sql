@@ -176,6 +176,17 @@ CREATE TABLE inventory (
     CONSTRAINT inventory_fk_stores FOREIGN KEY (store_id) REFERENCES stores(store_id),
     CONSTRAINT inventory_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id)
 );
+-- CREATES RETURNED_INVENTORY TABLE
+CREATE TABLE returned_inventory (
+    -- each returned item has a unique return id
+    returned_inventory_id INT PRIMARY KEY AUTO_INCREMENT,
+    store_id INT NOT NULL,
+    item_id INT NOT NULL,
+    item_qty INT NOT NULL,
+    -- used to store CURRENT_USER()
+    employee VARCHAR(64) NOT NULL,
+    date_time DATETIME DEFAULT NOW()
+);
 
 -- *****************
 -- CREATE FUNCTIONS
@@ -298,12 +309,12 @@ BEGIN
     DECLARE id INT;
     SET id =
     (
-        SELECT receipt_id
-        FROM receipts rec 
-            JOIN registers reg ON rec.register_id = reg.register_id
-            JOIN stores s ON s.store_id = reg.store_id
-        WHERE store_id = given_store_id;
-    )
+        SELECT s.store_id
+		FROM receipts rec 
+			JOIN registers reg ON rec.register_id = reg.register_id
+			JOIN stores s ON s.store_id = reg.store_id
+        WHERE rec.receipt_id = given_store_id
+    );
 
     RETURN(id);
 END //
@@ -752,6 +763,31 @@ BEGIN
     WHERE item_id = itemIDFromUPC(given_upc) AND 
     store_id = storeIDFromReceiptID(given_receipt_id);
 END //
+-- cancelReceipt
+-- Here in case a receipt is cancelled--i.e, someone doesn't have enough to pay
+DROP PROCEDURE IF EXISTS cancelReceipt;
+DELIMITER //
+CREATE PROCEDURE cancelReceipt(
+    given_receipt_id INT
+)
+BEGIN
+    -- returned_inventory_id is AUTO INCREMENT and DATETIME is NOW()
+    INSERT INTO returned_inventory (item_id, store_id, employee, item_qty)
+    -- multiple rows are added into returned_inventory table
+    SELECT DISTINCT item_id, storeIDFromReceiptID(given_receipt_id), CURRENT_USER(), COUNT(item_id)
+    FROM receipt_details
+    WHERE receipt_id = given_receipt_id
+    GROUP BY item_id;
+
+    -- remove all associated receipt details
+    DELETE FROM receipt_details
+    WHERE receipt_id = given_receipt_id;
+
+    -- remove from receipts table
+    DELETE FROM receipts
+    WHERE receipt_id = given_receipt_id;
+END //
+DELIMITER ;
 -- finalizeReceipt
 DROP PROCEDURE IF EXISTS finalizeReceipt;
 DELIMITER //
